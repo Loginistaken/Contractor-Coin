@@ -576,6 +576,17 @@ def lambda_handler(event, context):
         return {
             'statusCode': 403,
             'body': json.dumps('Forbidden')
+            
+// Function to display credit and acknowledgment message
+void showCredits() {
+    cout << "---------------------------------------------" << endl;
+    cout << "Credit for Chatbot System Design:" << endl;
+    cout << "This C++ version of a simple chatbot is inspired by OpenAI's GPT-based models." << endl;
+    cout << "Special thanks to OpenAI's team for their groundbreaking work in AI, which enabled the development of the ChatGPT system." << endl;
+    cout << "For more information, visit: https://openai.com/" << endl;
+    cout << "Special thanks to Elindau for contributing to the development and providing support via: elindau85@gmail.com" << endl;
+    cout << "Copyright © 2025. All rights reserved." << endl;
+    cout << "---------------------------------------------" << endl;
         }
 MIT License
 Copyright (c) 2025 <Your Name>
