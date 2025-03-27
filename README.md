@@ -44,45 +44,39 @@ struct Transaction {
     std::string sender;
     std::string receiver;
     double amount;
+    double fee;
+    double burned;
+    double maintenance;
+    double team_profit;
+    time_t timestamp;
 
     std::string toString() const {
-        return "Sender: " + sender + " | Receiver: " + receiver + " | Amount: " + std::to_string(amount);
+        return "Sender: " + sender + " | Receiver: " + receiver + " | Amount: " + std::to_string(amount) +
+               " | Fee: " + std::to_string(fee) + " | Burned: " + std::to_string(burned);
     }
 };
 
-using namespace std;
-
-struct Transaction {
-    string sender;
-    string receiver;
-    double amount;
-    double fee;
-    double burned;
-    time_t timestamp;
-};
-
+// Block Structure for the Blockchain
 struct Block {
     int index;
     time_t timestamp;
-    vector<Transaction> transactions;
+    std::vector<Transaction> transactions;
     int proof;
-    string previous_hash;
-    string hash;
+    std::string previous_hash;
+    std::string hash;
 };
 
+// Blockchain Class
 class Blockchain {
 private:
-    vector<Block> chain;
-    vector<Transaction> transactions;
-    const double total_supply = 1'000'000'000'000;
-    const double owner_vault = 1'000'000'000;
-    const int mining_reward = 50;
-    const int difficulty = 4;
-    const double transaction_fee = 0.002;
-    const double burn_rate = 0.02;
+    std::vector<Block> chain;
+    std::vector<Transaction> transactions;
+    double mining_reward = 50.0;  // Reward for mining a block
+    int difficulty = 4;  // Number of leading zeros required for proof of work
 
-    string calculate_hash(const Block& block) {
-        stringstream ss;
+    // Function to calculate hash of a block
+    std::string calculate_hash(const Block& block) {
+        std::stringstream ss;
         ss << block.index << block.timestamp << block.previous_hash << block.proof;
         for (const auto& tx : block.transactions) {
             ss << tx.sender << tx.receiver << tx.amount << tx.fee << tx.burned;
@@ -90,14 +84,30 @@ private:
         return sha256(ss.str());
     }
 
-    string sha256(const string& input) {
+    // Function to calculate SHA256 hash
+    std::string sha256(const std::string& input) {
         unsigned char hash[SHA256_DIGEST_LENGTH];
         SHA256(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), hash);
-        stringstream ss;
+        std::stringstream ss;
         for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-            ss << hex << setw(2) << setfill('0') << (int)hash[i];
+            ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
         }
         return ss.str();
+    }
+
+    // Proof of Work Algorithm
+    int proof_of_work(int previous_proof) {
+        int new_proof = 1;
+        bool check_proof = false;
+        while (!check_proof) {
+            std::string hash_attempt = sha256(std::to_string(new_proof * new_proof - previous_proof * previous_proof));
+            if (hash_attempt.substr(0, difficulty) == std::string(difficulty, '0')) {
+                check_proof = true;
+            } else {
+                new_proof++;
+            }
+        }
+        return new_proof;
     }
 
 public:
@@ -105,6 +115,7 @@ public:
         create_genesis_block();
     }
 
+    // Create the Genesis Block (the first block in the blockchain)
     void create_genesis_block() {
         Block genesis;
         genesis.index = 1;
@@ -115,37 +126,29 @@ public:
         chain.push_back(genesis);
     }
 
+    // Retrieve the previous block in the blockchain
     Block get_previous_block() {
         return chain.back();
     }
 
-    int proof_of_work(int previous_proof) {
-        int new_proof = 1;
-        bool check_proof = false;
-        while (!check_proof) {
-            string hash_attempt = sha256(to_string(new_proof * new_proof - previous_proof * previous_proof));
-            if (hash_attempt.substr(0, difficulty) == string(difficulty, '0')) {
-                check_proof = true;
-            } else {
-                new_proof++;
-            }
-        }
-        return new_proof;
-    }
-
-    void add_transaction(string sender, string receiver, double amount) {
-        double fee = amount * transaction_fee;
-        double burned = amount * burn_rate;
+    // Add a new transaction to the blockchain
+    void add_transaction(std::string sender, std::string receiver, double amount) {
+        double fee = amount * BlockchainConfig().transactionFee;
+        double burned = amount * BlockchainConfig().burnRate;
         double net_amount = amount - (fee + burned);
-        Transaction tx = {sender, receiver, net_amount, fee, burned, time(nullptr)};
+        Transaction tx = {sender, receiver, net_amount, fee, burned, BlockchainConfig().maintenanceFee, BlockchainConfig().transactionFee};
         transactions.push_back(tx);
     }
 
-    void mine_block(string miner_address) {
+    // Mine a new block
+    void mine_block(std::string miner_address) {
         Block previous_block = get_previous_block();
         int proof = proof_of_work(previous_block.proof);
-        string previous_hash = previous_block.hash;
+        std::string previous_hash = previous_block.hash;
+
+        // Add the mining reward transaction
         add_transaction("Network", miner_address, mining_reward);
+
         Block new_block;
         new_block.index = chain.size() + 1;
         new_block.timestamp = time(nullptr);
@@ -157,20 +160,35 @@ public:
         chain.push_back(new_block);
     }
 
+    // Print the entire blockchain
     void print_chain() {
         for (const auto& block : chain) {
-            cout << "Index: " << block.index << "\nTimestamp: " << block.timestamp << "\nPrevious Hash: " << block.previous_hash << "\nHash: " << block.hash << "\n\n";
+            std::cout << "Index: " << block.index << "\nTimestamp: " << block.timestamp 
+                      << "\nPrevious Hash: " << block.previous_hash 
+                      << "\nHash: " << block.hash << "\n\n";
+            for (const auto& tx : block.transactions) {
+                std::cout << tx.toString() << "\n";
+            }
         }
     }
 };
 
 int main() {
     Blockchain blockchain;
-    blockchain.add_transaction("Alice", "Bob", 100);
-    blockchain.add_transaction("Bob", "Charlie", 50);
+
+    // Adding transactions to the blockchain
+    blockchain.add_transaction("Alice", "Bob", 1000);
+    blockchain.add_transaction("Bob", "Charlie", 500);
+    
+    // Mining a new block after transactions
     blockchain.mine_block("Miner1");
+
+    // Print the blockchain to verify the result
     blockchain.print_chain();
+    
     return 0;
+}
+
 }
 
 // Function for auto deployment of blockchain setup
