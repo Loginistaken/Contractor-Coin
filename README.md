@@ -13,7 +13,6 @@
 #include <boost/asio.hpp>  // Boost library for networking
 #include <openssl/sha.h>  // OpenSSL for cryptographic hashing
 #include <openssl/evp.h>  // For SHA256
-
 using namespace boost::asio;
 using ip::tcp;
 
