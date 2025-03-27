@@ -50,384 +50,127 @@ struct Transaction {
     }
 };
 
-// Block Structure
-struct Block {
-    std::string previousHash;
-    std::string blockHash;
-    std::string data;  // Transactions data stored as a string
-    long timestamp;
-    int blockIndex;
+using namespace std;
 
-    std::string calculateHash() {
-        std::string toHash = previousHash + data + std::to_string(timestamp) + std::to_string(blockIndex);
-        unsigned char hash[SHA256_DIGEST_LENGTH];
-        SHA256_CTX sha256Context;
-        SHA256_Init(&sha256Context);
-        SHA256_Update(&sha256Context, toHash.c_str(), toHash.length());
-        SHA256_Final(hash, &sha256Context);
-        std::stringstream ss;
-        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-            ss << std::hex << (int)hash[i];
-        }
-        return ss.str();
-    }
+struct Transaction {
+    string sender;
+    string receiver;
+    double amount;
+    double fee;
+    double burned;
+    time_t timestamp;
 };
-Block #0:
-Data: 
-Hash: 6c1d28f460d54e16fd22518a7382133d9b91d4b5829a979b131ae2c443c424e6
-Previous Hash: 0
-Timestamp: 1615674693764558978
 
-Block #1:
-Data: Sender: Alice | Receiver: Bob | Amount: 50
-Hash: 89f0f3d9c9bcf98b2c12c8d38b3d02f94e2a99c829195354ee50c97fa3621f5
-Previous Hash: 6c1d28f460d54e16fd22518a7382133d9b91d4b5829a979b131ae2c443c424e6
-Timestamp: 1615674694764568979
+struct Block {
+    int index;
+    time_t timestamp;
+    vector<Transaction> transactions;
+    int proof;
+    string previous_hash;
+    string hash;
+};
 
-Ox Address: ****4a4d3b8d2e1f20f4c17a2bdf09c2495e1b9da7cf8b53a45e1a30d91c9b39bfe
-Ox ID: ****d24b8c0e9dbd7b320f57c90876a6c1f7a145f69733dfe88dbed6b42c8c9c59f
-
-
-// Blockchain Class
 class Blockchain {
-public:
-    BlockchainConfig config;
-    std::vector<Block> chain;
-    Blockchain() {
-        // Create the genesis block
-        Block genesisBlock;
-        genesisBlock.previousHash = "0";
-        genesisBlock.blockHash = genesisBlock.calculateHash();
-        genesisBlock.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
-        genesisBlock.blockIndex = 0;
-        chain.push_back(genesisBlock);
-    }
+private:
+    vector<Block> chain;
+    vector<Transaction> transactions;
+    const double total_supply = 1'000'000'000'000;
+    const double owner_vault = 1'000'000'000;
+    const int mining_reward = 50;
+    const int difficulty = 4;
+    const double transaction_fee = 0.002;
+    const double burn_rate = 0.02;
 
-    void addBlock(std::vector<Transaction>& transactions) {
-        std::lock_guard<std::mutex> lock(mtx);  // Ensure thread safety
-        Block newBlock;
-        newBlock.previousHash = chain.back().blockHash;
-        std::stringstream ss;
-        for (const auto& transaction : transactions) {
-            ss << transaction.toString() << "\n";
-        }
-        newBlock.data = ss.str();
-        newBlock.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
-        newBlock.blockIndex = chain.size();
-        newBlock.blockHash = newBlock.calculateHash();
-        chain.push_back(newBlock);
-    }
-
-    void printBlockchain() {
-        for (const auto& block : chain) {
-            std::cout << "Block #" << block.blockIndex << ":\n";
-            std::cout << "Data: " << block.data << "\n";
-            std::cout << "Hash: " << block.blockHash << "\n";
-            std::cout << "Previous Hash: " << block.previousHash << "\n";
-            std::cout << "Timestamp: " << block.timestamp << "\n\n";
-        }
-    }
-};
-
-// Function to simulate transaction processing and queue handling
-void processTransactions(Blockchain& blockchain) {
-    while (!transactionQueue.empty()) {
-        std::lock_guard<std::mutex> lock(mtx);
-        // Retrieve the transaction, simulate processing, and then create a new block with the transactions
-        std::vector<Transaction> transactions;
-        transactions.push_back(Transaction{"Alice", "Bob", 50.0});  // Simulate a transaction
-        blockchain.addBlock(transactions);
-        transactionQueue.pop();
-    }
-}
-
-int main() {
-    Blockchain blockchain;
-
-    // Add some simulated transactions to the queue
-    transactionQueue.push("Alice->Bob: 50.0");
-    transactionQueue.push("Bob->Charlie: 30.0");
-
-    // Start a thread to process transactions
-    std::thread transactionProcessor(processTransactions, std::ref(blockchain));
-
-    // Wait for all transactions to be processed
-    transactionProcessor.join();
-
-    // Print the blockchain after transactions are added
-    blockchain.printBlockchain();
-
-    return 0;
-}
-
-// Block Structure for Blockchain
-struct Block {
-    std::string previousHash;
-    std::string hash;
-    std::vector<Transaction> transactions;
-    long timestamp;
-    int nonce;
-
-    // Calculate block hash using SHA-256
-    std::string calculateHash() {
-        std::stringstream ss;
-        ss << previousHash << timestamp << nonce;
-        for (const auto& tx : transactions) {
-            ss << tx.toString();
+    string calculate_hash(const Block& block) {
+        stringstream ss;
+        ss << block.index << block.timestamp << block.previous_hash << block.proof;
+        for (const auto& tx : block.transactions) {
+            ss << tx.sender << tx.receiver << tx.amount << tx.fee << tx.burned;
         }
         return sha256(ss.str());
     }
 
-    // Proof of Work (Mining)
-    void mineBlock(int difficulty) {
-        std::string target(difficulty, '0');
-        while (hash.substr(0, difficulty) != target) {
-            nonce++;
-            hash = calculateHash();
-        }
-        std::cout << "Block mined: " << hash << std::endl;
-    }
-};
-
-// Blockchain Structure
-class Blockchain {
-public:
-    std::vector<Block> chain;
-    int difficulty = 4;  // Mining difficulty (e.g., how many zeros in the hash)
-
-    Blockchain() {
-        // Create genesis block
-        Block genesisBlock;
-        genesisBlock.timestamp = std::time(0);
-        genesisBlock.previousHash = "0";
-        genesisBlock.nonce = 0;
-        genesisBlock.transactions.push_back(Transaction{"", "", 0});
-        genesisBlock.hash = genesisBlock.calculateHash();
-        chain.push_back(genesisBlock);
-    }
-
-    void addBlock(Block& newBlock) {
-        newBlock.previousHash = chain.back().hash;
-        newBlock.hash = newBlock.calculateHash();
-        newBlock.mineBlock(difficulty);
-        chain.push_back(newBlock);
-    }
-
-    void printChain() {
-        for (auto& block : chain) {
-            std::cout << "Block Hash: " << block.hash << std::endl;
-        }
-    }
-
-    // Function to apply transaction fees (1% to the owner, 0.02% to the maintenance vault)
-    void applyTransactionFees(Transaction& tx, BlockchainConfig& config) {
-        double teamProfit = tx.amount * config.transactionFee;
-        double maintenanceFee = tx.amount * config.maintenanceFee;
-
-        // Deduct team profit and maintenance fee from sender's amount
-        tx.amount -= (teamProfit + maintenanceFee);
-
-        // Add team profit to owner vault and maintenance fee to maintenance vault
-        config.ownerVault += teamProfit;
-        std::cout << "1% Team Profit transferred to Owner Vault: " << teamProfit << std::endl;
-
-        // Add maintenance fee to maintenance vault
-        std::cout << "0.02% Maintenance Fee transferred to Maintenance Vault: " << maintenanceFee << std::endl;
-    }
-
-private:
-    std::string sha256(const std::string str) {
+    string sha256(const string& input) {
         unsigned char hash[SHA256_DIGEST_LENGTH];
-        SHA256_CTX sha256_CTX;
-        SHA256_Init(&sha256_CTX);
-        SHA256_Update(&sha256_CTX, str.c_str(), str.length());
-        SHA256_Final(hash, &sha256_CTX);
-
-        std::stringstream ss;
+        SHA256(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), hash);
+        stringstream ss;
         for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-            ss << std::hex << (int)hash[i];
+            ss << hex << setw(2) << setfill('0') << (int)hash[i];
         }
         return ss.str();
     }
-};
 
-// Function to generate Coin Ox Address
-std::string generateOxAddress() {
-    return "0x" + std::to_string(rand() % 10000000000000000);  // Placeholder for Ox address generation
-}
-
-// Function to generate Ox ID
-std::string generateOxID() {
-    return "OXC-" + std::to_string(rand() % 1000000);  // Placeholder for Ox ID generation
-}
-
-// Function to upload Ox Address and Ox ID to Firebase
-void uploadToFirebase(const std::string& oxAddress, const std::string& oxID, const BlockchainConfig& config) {
-    CURL *curl;
-    CURLcode res;
-    std::string url = config.firebaseUrl + "/oxAddresses.json";
-    std::string jsonData = "{\"ox_address\": \"" + oxAddress + "\", \"ox_id\": \"" + oxID + "\"}";
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    curl = curl_easy_init();
-
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
-        res = curl_easy_perform(curl);
-
-        if (res != CURLE_OK) {
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-        }
-
-        curl_easy_cleanup(curl);
+public:
+    Blockchain() {
+        create_genesis_block();
     }
 
-    curl_global_cleanup();
-}
+    void create_genesis_block() {
+        Block genesis;
+        genesis.index = 1;
+        genesis.timestamp = time(nullptr);
+        genesis.previous_hash = "0";
+        genesis.proof = 1;
+        genesis.hash = calculate_hash(genesis);
+        chain.push_back(genesis);
+    }
+
+    Block get_previous_block() {
+        return chain.back();
+    }
+
+    int proof_of_work(int previous_proof) {
+        int new_proof = 1;
+        bool check_proof = false;
+        while (!check_proof) {
+            string hash_attempt = sha256(to_string(new_proof * new_proof - previous_proof * previous_proof));
+            if (hash_attempt.substr(0, difficulty) == string(difficulty, '0')) {
+                check_proof = true;
+            } else {
+                new_proof++;
+            }
+        }
+        return new_proof;
+    }
+
+    void add_transaction(string sender, string receiver, double amount) {
+        double fee = amount * transaction_fee;
+        double burned = amount * burn_rate;
+        double net_amount = amount - (fee + burned);
+        Transaction tx = {sender, receiver, net_amount, fee, burned, time(nullptr)};
+        transactions.push_back(tx);
+    }
+
+    void mine_block(string miner_address) {
+        Block previous_block = get_previous_block();
+        int proof = proof_of_work(previous_block.proof);
+        string previous_hash = previous_block.hash;
+        add_transaction("Network", miner_address, mining_reward);
+        Block new_block;
+        new_block.index = chain.size() + 1;
+        new_block.timestamp = time(nullptr);
+        new_block.transactions = transactions;
+        new_block.proof = proof;
+        new_block.previous_hash = previous_hash;
+        new_block.hash = calculate_hash(new_block);
+        transactions.clear();
+        chain.push_back(new_block);
+    }
+
+    void print_chain() {
+        for (const auto& block : chain) {
+            cout << "Index: " << block.index << "\nTimestamp: " << block.timestamp << "\nPrevious Hash: " << block.previous_hash << "\nHash: " << block.hash << "\n\n";
+        }
+    }
+};
 
 int main() {
-    BlockchainConfig config;
-    config.genesisBlock = "Genesis Block for " + config.coinName;
-    std::cout << "Genesis Block Created: " << config.genesisBlock << std::endl;
-
-    // Generate Ox Address and Ox ID for owner and user
-    config.oxAddress = generateOxAddress();
-    config.oxID = generateOxID();
-    std::cout << "Ox Address: " << config.oxAddress << std::endl;
-    std::cout << "Ox ID: " << config.oxID << std::endl;
-
-    // Upload to Firebase
-    uploadToFirebase(config.oxAddress, config.oxID, config);
-
     Blockchain blockchain;
-    Block newBlock;
-    newBlock.timestamp = std::time(0);
-    newBlock.transactions.push_back(Transaction{"Sender", "Receiver", 1000});  // Example transaction
-    blockchain.applyTransactionFees(newBlock.transactions[0], config);  // Apply transaction fees
-    blockchain.addBlock(newBlock);
-
-    blockchain.printChain();
+    blockchain.add_transaction("Alice", "Bob", 100);
+    blockchain.add_transaction("Bob", "Charlie", 50);
+    blockchain.mine_block("Miner1");
+    blockchain.print_chain();
     return 0;
-}
-}
-
-// Function to add a transaction to the queue
-void addTransaction(const Transaction& tx) {
-    std::lock_guard<std::mutex> lock(mtx);
-    transactionQueue.push(tx.toString());
-    std::cout << "Transaction added to queue: " << tx.toString() << std::endl;
-}
-
-// Function to process transactions
-void processTransactions() {
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::seconds(5)); // Simulate processing time
-        std::lock_guard<std::mutex> lock(mtx);
-        if (!transactionQueue.empty()) {
-            std::string tx = transactionQueue.front();
-            transactionQueue.pop();
-            std::cout << "Processing transaction: " << tx << std::endl;
-        }
-    }
-}
-
-// P2P Server Function
-void startServer() {
-    try {
-        io_service ioService;
-        tcp::acceptor acceptor(ioService, tcp::endpoint(tcp::v4(), 8080));
-        std::cout << "P2P Node is listening on port 8080...\n";
-
-        while (true) {
-            tcp::socket socket(ioService);
-            acceptor.accept(socket);
-
-            std::string message = "Welcome to the Contractor-coin Network!";
-            boost::asio::write(socket, boost::asio::buffer(message));
-
-            std::cout << "New peer connected. Message sent.\n";
-        }
-    } catch (std::exception& e) {
-        std::cerr << "Server error: " << e.what() << std::endl;
-    }
-}
-
-// P2P Client Function
-void connectToPeer(const std::string& ip, int port) {
-    try {
-        io_service ioService;
-        tcp::socket socket(ioService);
-        tcp::resolver resolver(ioService);
-        tcp::resolver::query query(ip, std::to_string(port));
-        tcp::resolver::iterator endpoint = resolver.resolve(query);
-        boost::asio::connect(socket, endpoint);
-
-        char response[128];
-        size_t len = socket.read_some(boost::asio::buffer(response));
-        std::cout << "Received from peer: " << std::string(response, len) << std::endl;
-    } catch (std::exception& e) {
-        std::cerr << "Client error: " << e.what() << std::endl;
-    }
-}
-
-
-// Mutex for thread synchronization in mining
-std::mutex miningMutex;
-
-// Blockchain Configuration Structure
-struct BlockchainConfig {
-    std::string oxAddress;
-    std::string oxID;
-    int difficulty = 4; // Default difficulty level for PoW
-};
-
-// Function to generate SHA-256 hash using OpenSSL
-std::string sha256(const std::string& input) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, input.c_str(), input.size());
-    SHA256_Final(hash, &sha256);
-
-    std::stringstream ss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
-    }
-    return ss.str();
-}
-
-// Simulated function to generate Ox Address & Ox ID
-std::string generateOxAddress() { return "Ox*****************"; }
-std::string generateOxID() { return "OxID***********"; }
-
-// Function to create the Genesis Block
-void createGenesisBlock(BlockchainConfig& config) {
-    std::cout << "Creating Genesis Block...\n";
-    std::string genesisData = "Genesis Block | Address: " + config.oxAddress + " | ID: " + config.oxID;
-    std::string genesisHash = sha256(genesisData);
-    std::cout << "Genesis Block Hash: " << genesisHash << "\n";
-}
-
-// Function for mining (Proof-of-Work)
-void mineBlock(int difficulty) {
-    std::cout << "Starting mining with difficulty: " << difficulty << "\n";
-    
-    std::string target(difficulty, '0');  // Mining target: e.g., "0000..."
-    int nonce = 0;
-    std::string hash;
-
-    while (true) {
-        std::string data = "Block Data " + std::to_string(nonce);
-        hash = sha256(data);
-        
-        if (hash.substr(0, difficulty) == target) { 
-            std::lock_guard<std::mutex> lock(miningMutex); // Synchronize mining result
-            std::cout << "⛏️ Mined a new block! Hash: " << hash << " | Nonce: " << nonce << "\n";
-            break;
-        }
-        ++nonce;
-    }
 }
 
 // Function for auto deployment of blockchain setup
