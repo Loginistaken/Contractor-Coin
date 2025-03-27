@@ -72,6 +72,21 @@ struct Block {
         return ss.str();
     }
 };
+Block #0:
+Data: 
+Hash: 6c1d28f460d54e16fd22518a7382133d9b91d4b5829a979b131ae2c443c424e6
+Previous Hash: 0
+Timestamp: 1615674693764558978
+
+Block #1:
+Data: Sender: Alice | Receiver: Bob | Amount: 50
+Hash: 89f0f3d9c9bcf98b2c12c8d38b3d02f94e2a99c829195354ee50c97fa3621f5
+Previous Hash: 6c1d28f460d54e16fd22518a7382133d9b91d4b5829a979b131ae2c443c424e6
+Timestamp: 1615674694764568979
+
+Owner oxID: 0x4a4d3b8d2e1f20f4c17a2bdf09c2495e1b9da7cf
+Owner Address: 0x8f4903d7d5c927b8e7ac58f2e17b6b8d597c2281
+
 
 // Blockchain Class
 class Blockchain {
