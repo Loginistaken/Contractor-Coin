@@ -19,15 +19,44 @@ using ip::tcp;
 std::mutex mtx;  // Mutex for thread safety
 std::queue<std::string> transactionQueue;  // Simple transaction queue
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstdlib>
+#include <thread>
+#include <memory>
+#include <future>
+#include <chrono>
+#include <vector>
+#include <mutex>
+#include <sstream>
+#include <queue>
+#include <boost/asio.hpp>  // Boost library for networking
+#include <openssl/sha.h>  // OpenSSL for cryptographic hashing
+#include <openssl/evp.h>  // For SHA256
+#include <cstdlib>
+#include <curl/curl.h>  // For IPFS and Firebase integration
+
+using namespace boost::asio;
+using ip::tcp;
+
+std::mutex mtx;  // Mutex for thread safety
+std::queue<std::string> transactionQueue;  // Simple transaction queue
+
 // Blockchain Network Configurations
 struct BlockchainConfig {
     std::string coinName = "Contractor-coin";
     std::string oxAddress;
     std::string oxID;
     std::string genesisBlock;
-    double totalSupply = 1000000000000;
-    double burnRate = 0.02;
-    double ownerVault = 1000000000;
+    double totalSupply = 1000000000000;  // Total supply of coins
+    double burnRate = 0.02;  // Default burn rate (2%)
+    double ownerVault = 1000000000;  // Owner's vault (1 billion coins)
+    double userVault = 1000000000000;  // User's vault (1 trillion coins)
+    double transactionFee = 0.01;  // 1% transaction fee for team profit
+    double maintenanceFee = 0.0002;  // 0.02% maintenance fee
+    std::string maintenanceVault = "0xMaintenanceVault";  // Vault address for maintenance fee
+    std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
 };
 
 // Transaction Structure
@@ -93,13 +122,29 @@ public:
         newBlock.mineBlock(difficulty);
         chain.push_back(newBlock);
     }
-    
+
     void printChain() {
         for (auto& block : chain) {
             std::cout << "Block Hash: " << block.hash << std::endl;
         }
     }
-    
+
+    // Function to apply transaction fees (1% to the owner, 0.02% to the maintenance vault)
+    void applyTransactionFees(Transaction& tx, BlockchainConfig& config) {
+        double teamProfit = tx.amount * config.transactionFee;
+        double maintenanceFee = tx.amount * config.maintenanceFee;
+
+        // Deduct team profit and maintenance fee from sender's amount
+        tx.amount -= (teamProfit + maintenanceFee);
+
+        // Add team profit to owner vault and maintenance fee to maintenance vault
+        config.ownerVault += teamProfit;
+        std::cout << "1% Team Profit transferred to Owner Vault: " << teamProfit << std::endl;
+
+        // Add maintenance fee to maintenance vault
+        std::cout << "0.02% Maintenance Fee transferred to Maintenance Vault: " << maintenanceFee << std::endl;
+    }
+
 private:
     std::string sha256(const std::string str) {
         unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -107,7 +152,7 @@ private:
         SHA256_Init(&sha256_CTX);
         SHA256_Update(&sha256_CTX, str.c_str(), str.length());
         SHA256_Final(hash, &sha256_CTX);
-        
+
         std::stringstream ss;
         for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
             ss << std::hex << (int)hash[i];
@@ -118,18 +163,63 @@ private:
 
 // Function to generate Coin Ox Address
 std::string generateOxAddress() {
-    return "0x" + std::to_string(rand() % 10000000000000000); // Placeholder
+    return "0x" + std::to_string(rand() % 10000000000000000);  // Placeholder for Ox address generation
 }
 
 // Function to generate Ox ID
 std::string generateOxID() {
-    return "OXC-" + std::to_string(rand() % 1000000); // Placeholder
+    return "OXC-" + std::to_string(rand() % 1000000);  // Placeholder for Ox ID generation
 }
 
-// Function to create the Genesis Block (blockchain's first block)
-void createGenesisBlock(BlockchainConfig& config) {
+// Function to upload Ox Address and Ox ID to Firebase
+void uploadToFirebase(const std::string& oxAddress, const std::string& oxID, const BlockchainConfig& config) {
+    CURL *curl;
+    CURLcode res;
+    std::string url = config.firebaseUrl + "/oxAddresses.json";
+    std::string jsonData = "{\"ox_address\": \"" + oxAddress + "\", \"ox_id\": \"" + oxID + "\"}";
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
+
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+        res = curl_easy_perform(curl);
+
+        if (res != CURLE_OK) {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+        }
+
+        curl_easy_cleanup(curl);
+    }
+
+    curl_global_cleanup();
+}
+
+int main() {
+    BlockchainConfig config;
     config.genesisBlock = "Genesis Block for " + config.coinName;
     std::cout << "Genesis Block Created: " << config.genesisBlock << std::endl;
+
+    // Generate Ox Address and Ox ID for owner and user
+    config.oxAddress = generateOxAddress();
+    config.oxID = generateOxID();
+    std::cout << "Ox Address: " << config.oxAddress << std::endl;
+    std::cout << "Ox ID: " << config.oxID << std::endl;
+
+    // Upload to Firebase
+    uploadToFirebase(config.oxAddress, config.oxID, config);
+
+    Blockchain blockchain;
+    Block newBlock;
+    newBlock.timestamp = std::time(0);
+    newBlock.transactions.push_back(Transaction{"Sender", "Receiver", 1000});  // Example transaction
+    blockchain.applyTransactionFees(newBlock.transactions[0], config);  // Apply transaction fees
+    blockchain.addBlock(newBlock);
+
+    blockchain.printChain();
+    return 0;
+}
 }
 
 // Function to add a transaction to the queue
