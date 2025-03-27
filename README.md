@@ -218,8 +218,8 @@ std::string sha256(const std::string& input) {
 }
 
 // Simulated function to generate Ox Address & Ox ID
-std::string generateOxAddress() { return "Ox123456789ABCDEF"; }
-std::string generateOxID() { return "OxID987654321"; }
+std::string generateOxAddress() { return "Ox*****************"; }
+std::string generateOxID() { return "OxID***********"; }
 
 // Function to create the Genesis Block
 void createGenesisBlock(BlockchainConfig& config) {
