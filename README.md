@@ -21,7 +21,7 @@ std::queue<std::string> transactionQueue;  // Simple transaction queue
 
 // Blockchain Network Configurations
 struct BlockchainConfig {
-    std::string coinName = "SolScriptCoin";
+    std::string coinName = "Contractor-coin";
     std::string oxAddress;
     std::string oxID;
     std::string genesisBlock;
@@ -163,7 +163,7 @@ void startServer() {
             tcp::socket socket(ioService);
             acceptor.accept(socket);
 
-            std::string message = "Welcome to the SolScriptCoin Network!";
+            std::string message = "Welcome to the Contractor-coin Network!";
             boost::asio::write(socket, boost::asio::buffer(message));
 
             std::cout << "New peer connected. Message sent.\n";
