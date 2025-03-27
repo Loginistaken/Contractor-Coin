@@ -191,36 +191,105 @@ void connectToPeer(const std::string& ip, int port) {
     }
 }
 
-// Mining Configuration (proof-of-work)
-void configureMining() {
-    std::cout << "Mining configuration completed!" << std::endl;
+
+// Mutex for thread synchronization in mining
+std::mutex miningMutex;
+
+// Blockchain Configuration Structure
+struct BlockchainConfig {
+    std::string oxAddress;
+    std::string oxID;
+    int difficulty = 4; // Default difficulty level for PoW
+};
+
+// Function to generate SHA-256 hash using OpenSSL
+std::string sha256(const std::string& input) {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, input.c_str(), input.size());
+    SHA256_Final(hash, &sha256);
+
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+    }
+    return ss.str();
+}
+
+// Simulated function to generate Ox Address & Ox ID
+std::string generateOxAddress() { return "Ox123456789ABCDEF"; }
+std::string generateOxID() { return "OxID987654321"; }
+
+// Function to create the Genesis Block
+void createGenesisBlock(BlockchainConfig& config) {
+    std::cout << "Creating Genesis Block...\n";
+    std::string genesisData = "Genesis Block | Address: " + config.oxAddress + " | ID: " + config.oxID;
+    std::string genesisHash = sha256(genesisData);
+    std::cout << "Genesis Block Hash: " << genesisHash << "\n";
+}
+
+// Function for mining (Proof-of-Work)
+void mineBlock(int difficulty) {
+    std::cout << "Starting mining with difficulty: " << difficulty << "\n";
+    
+    std::string target(difficulty, '0');  // Mining target: e.g., "0000..."
+    int nonce = 0;
+    std::string hash;
+
+    while (true) {
+        std::string data = "Block Data " + std::to_string(nonce);
+        hash = sha256(data);
+        
+        if (hash.substr(0, difficulty) == target) { 
+            std::lock_guard<std::mutex> lock(miningMutex); // Synchronize mining result
+            std::cout << "⛏️ Mined a new block! Hash: " << hash << " | Nonce: " << nonce << "\n";
+            break;
+        }
+        ++nonce;
+    }
 }
 
 // Function for auto deployment of blockchain setup
 void autoDeployment() {
-    std::cout << "Setting up Blockchain Network...\n";
-    
-    // Using smart pointers for memory management
-    auto config = std::make_shared<BlockchainConfig>();
-    
-    // Generating Ox Address & Ox ID
-    config->oxAddress = generateOxAddress();
-    config->oxID = generateOxID();
-    
-    createGenesisBlock(*config); // Pass config by reference
-    
-    // Start mining configuration in a separate thread for multithreading
-    std::thread miningThread(configureMining); 
-    
-    // Wait for the mining thread to finish
-    miningThread.join();
-    
-    std::cout << "Blockchain Network Setup Complete\n";
-    
-    // Simulating connection to an external platform
-    std::cout << "Connecting to external platform...\n";
-    // Here, you can implement API logic for connecting to external platforms
-    std::cout << "Connected to Coinbase or equivalent platform\n";
+    try {
+        std::cout << "🚀 Setting up Blockchain Network...\n";
+
+        // Using shared pointer for config memory management
+        auto config = std::make_shared<BlockchainConfig>();
+
+        // Generating Ox Address & Ox ID
+        config->oxAddress = generateOxAddress();
+        config->oxID = generateOxID();
+
+        // Initialize Genesis Block
+        createGenesisBlock(*config);
+
+        // Dynamic Difficulty Adjustment
+        int miningThreads = std::thread::hardware_concurrency(); // Detect CPU cores
+        config->difficulty += (miningThreads / 2);  // Increase difficulty based on threads
+        
+        // Launch multithreaded mining
+        std::vector<std::thread> miners;
+        for (int i = 0; i < miningThreads; ++i) {
+            miners.emplace_back(mineBlock, config->difficulty);
+        }
+
+        // Wait for all threads to complete mining
+        for (auto& miner : miners) {
+            miner.join();
+        }
+
+        std::cout << "✅ Blockchain Network Setup Complete!\n";
+
+        // Simulate connection to an external platform
+        std::cout << "🔗 Connecting to external platform...\n";
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << "✅ Connected to Coinbase or equivalent platform!\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Blockchain deployment failed: " << e.what() << "\n";
+    }
 }
 
 // Function to simulate automatic pop-up of the MIT License
@@ -379,54 +448,69 @@ powershell -Command "echo Blockchain Setup Complete"
 #include "network.h"  // For P2P networking
 #include "miner.h"    // For mining logic
 
-// Blockchain data structure
-struct Block {
-    int index;
-    std::string previousHash;
-    std::string hash;
-    std::string data;
-    long long timestamp;
-
-    Block(int idx, std::string prevHash, std::string data)
-        : index(idx), previousHash(prevHash), data(data) {
-        timestamp = std::time(0);
-        hash = calculateHash();
-    }
-
-    std::string calculateHash() {
-        // Simple hash function, replace with a secure hash like SHA256
-        return std::to_string(index) + previousHash + data + std::to_string(timestamp);
-    }
+// Blockchain Configuration Structure
+struct BlockchainConfig {
+    std::string coinName = "Contractor Coin";
+    std::string oxAddress;
+    std::string oxID;
+    std::string genesisBlock;
 };
 
-class Blockchain {
-public:
-    Blockchain() {
-        blocks.push_back(Block(0, "0", "Genesis Block"));
-    }
+// Function to simulate automatic pop-up of the MIT License
+void popUpMITLicense() {
+    std::cout << "\n-----------------------------------------------\n";
+    std::cout << "📜 Displaying MIT License...\n";
+    std::cout << "MIT License: Permission is hereby granted, free of charge, to any person obtaining a copy of this software ";
+    std::cout << "and associated documentation files (the \"Software\"), to deal in the Software without restriction, ";
+    std::cout << "including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, ";
+    std::cout << "and/or sell copies of the Software...\n";
+    std::cout << "-----------------------------------------------\n";
 
-    void addBlock(std::string data) {
-        Block newBlock(blocks.size(), blocks.back().hash, data);
-        blocks.push_back(newBlock);
-    }
+    std::this_thread::sleep_for(std::chrono::seconds(5));  // Give time to read
 
-    void printBlockchain() {
-        for (const auto& block : blocks) {
-            std::cout << "Block #" << block.index << " - Hash: " << block.hash << std::endl;
-        }
-    }
+    std::cout << "✅ Exiting program...\n";
+}
 
-private:
-    std::vector<Block> blocks;
-};
+// Function to execute terminal or PowerShell commands dynamically
+void runCommand(const std::string& command) {
+    std::cout << "🔹 Running command: " << command << "\n";
+    std::system(command.c_str()); // Executes the provided command (PowerShell/Terminal)
+}
+
+// Function to simulate auto-deployment of the blockchain
+void autoDeployment() {
+    std::cout << "🚀 Setting up Blockchain Network...\n";
+
+    // Creating blockchain configuration (Placeholder values)
+    BlockchainConfig config;
+    config.oxAddress = "Ox123456789ABCDEF";
+    config.oxID = "OxID987654321";
+    config.genesisBlock = "GenesisBlockHashPlaceholder";
+
+    std::cout << "✅ Blockchain Network Setup Complete!\n";
+
+    // Auto-trigger PowerShell or Terminal commands after blockchain setup
+    std::string platformCommand;
+
+    #ifdef _WIN32  // Check if on Windows
+        platformCommand = "powershell -Command \"Write-Host 'Blockchain Setup Complete'\"";
+    #else // UNIX-based system
+        platformCommand = "bash -c \"echo 'Blockchain Setup Complete'\"";
+    #endif
+
+    // Execute the command to indicate successful deployment
+    runCommand(platformCommand);
+}
 
 int main() {
-    Blockchain myBlockchain;
-    myBlockchain.addBlock("First Block Data");
-    myBlockchain.addBlock("Second Block Data");
+    // Automatically deploy blockchain
+    autoDeployment();
 
-    myBlockchain.printBlockchain();
+    // Display MIT License pop-up
+    popUpMITLicense();
+
     return 0;
+}
 }
 #include <boost/asio.hpp>
 #include <iostream>
