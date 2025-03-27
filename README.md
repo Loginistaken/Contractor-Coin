@@ -13,34 +13,14 @@
 #include <boost/asio.hpp>  // Boost library for networking
 #include <openssl/sha.h>  // OpenSSL for cryptographic hashing
 #include <openssl/evp.h>  // For SHA256
-using namespace boost::asio;
-using ip::tcp;
-
-std::mutex mtx;  // Mutex for thread safety
-std::queue<std::string> transactionQueue;  // Simple transaction queue
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstdlib>
-#include <thread>
-#include <memory>
-#include <future>
-#include <chrono>
-#include <vector>
-#include <mutex>
-#include <sstream>
-#include <queue>
-#include <boost/asio.hpp>  // Boost library for networking
-#include <openssl/sha.h>  // OpenSSL for cryptographic hashing
-#include <openssl/evp.h>  // For SHA256
 #include <cstdlib>
 #include <curl/curl.h>  // For IPFS and Firebase integration
 
 using namespace boost::asio;
 using ip::tcp;
 
-std::mutex mtx;  // Mutex for thread safety
+// Mutex for thread safety
+std::mutex mtx;  
 std::queue<std::string> transactionQueue;  // Simple transaction queue
 
 // Blockchain Network Configurations
@@ -69,6 +49,101 @@ struct Transaction {
         return "Sender: " + sender + " | Receiver: " + receiver + " | Amount: " + std::to_string(amount);
     }
 };
+
+// Block Structure
+struct Block {
+    std::string previousHash;
+    std::string blockHash;
+    std::string data;  // Transactions data stored as a string
+    long timestamp;
+    int blockIndex;
+
+    std::string calculateHash() {
+        std::string toHash = previousHash + data + std::to_string(timestamp) + std::to_string(blockIndex);
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        SHA256_CTX sha256Context;
+        SHA256_Init(&sha256Context);
+        SHA256_Update(&sha256Context, toHash.c_str(), toHash.length());
+        SHA256_Final(hash, &sha256Context);
+        std::stringstream ss;
+        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+            ss << std::hex << (int)hash[i];
+        }
+        return ss.str();
+    }
+};
+
+// Blockchain Class
+class Blockchain {
+public:
+    BlockchainConfig config;
+    std::vector<Block> chain;
+    Blockchain() {
+        // Create the genesis block
+        Block genesisBlock;
+        genesisBlock.previousHash = "0";
+        genesisBlock.blockHash = genesisBlock.calculateHash();
+        genesisBlock.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+        genesisBlock.blockIndex = 0;
+        chain.push_back(genesisBlock);
+    }
+
+    void addBlock(std::vector<Transaction>& transactions) {
+        std::lock_guard<std::mutex> lock(mtx);  // Ensure thread safety
+        Block newBlock;
+        newBlock.previousHash = chain.back().blockHash;
+        std::stringstream ss;
+        for (const auto& transaction : transactions) {
+            ss << transaction.toString() << "\n";
+        }
+        newBlock.data = ss.str();
+        newBlock.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+        newBlock.blockIndex = chain.size();
+        newBlock.blockHash = newBlock.calculateHash();
+        chain.push_back(newBlock);
+    }
+
+    void printBlockchain() {
+        for (const auto& block : chain) {
+            std::cout << "Block #" << block.blockIndex << ":\n";
+            std::cout << "Data: " << block.data << "\n";
+            std::cout << "Hash: " << block.blockHash << "\n";
+            std::cout << "Previous Hash: " << block.previousHash << "\n";
+            std::cout << "Timestamp: " << block.timestamp << "\n\n";
+        }
+    }
+};
+
+// Function to simulate transaction processing and queue handling
+void processTransactions(Blockchain& blockchain) {
+    while (!transactionQueue.empty()) {
+        std::lock_guard<std::mutex> lock(mtx);
+        // Retrieve the transaction, simulate processing, and then create a new block with the transactions
+        std::vector<Transaction> transactions;
+        transactions.push_back(Transaction{"Alice", "Bob", 50.0});  // Simulate a transaction
+        blockchain.addBlock(transactions);
+        transactionQueue.pop();
+    }
+}
+
+int main() {
+    Blockchain blockchain;
+
+    // Add some simulated transactions to the queue
+    transactionQueue.push("Alice->Bob: 50.0");
+    transactionQueue.push("Bob->Charlie: 30.0");
+
+    // Start a thread to process transactions
+    std::thread transactionProcessor(processTransactions, std::ref(blockchain));
+
+    // Wait for all transactions to be processed
+    transactionProcessor.join();
+
+    // Print the blockchain after transactions are added
+    blockchain.printBlockchain();
+
+    return 0;
+}
 
 // Block Structure for Blockchain
 struct Block {
