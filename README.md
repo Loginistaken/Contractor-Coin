@@ -29,10 +29,10 @@ struct BlockchainConfig {
     std::string oxAddress;
     std::string oxID;
     std::string genesisBlock;
-    double totalSupply = 1000000000000;  // Total supply of coins
+    double totalSupply = 7000000000;  // Total supply of coins
     double burnRate = 0.02;  // Default burn rate (2%)
     double ownerVault = 1000000000;  // Owner's vault (1 billion coins)
-    double userVault = 1000000000000;  // User's vault (1 trillion coins)
+    double userVault = 6000000000;  // User's vault (1 trillion coins)
     double transactionFee = 0.01;  // 1% transaction fee for team profit
     double maintenanceFee = 0.0002;  // 0.02% maintenance fee
     std::string maintenanceVault = "0xMaintenanceVault";  // Vault address for maintenance fee
