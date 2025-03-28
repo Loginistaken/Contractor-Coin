@@ -424,8 +424,8 @@ void autoDeployment() {
 
     // Creating blockchain configuration (Placeholder values)
     BlockchainConfig config;
-    config.oxAddress = "Ox123456789ABCDEF";
-    config.oxID = "OxID987654321";
+    Ox Address: ****4a4d3b8d2e1f20f4c17a2bdf09c2495e1b9da7cf8b53a45e1a30d91c9b39bfe
+Ox ID: ****d24b8c0e9dbd7b320f57c90876a6c1f7a145f69733dfe88dbed6b42c8c9c59f";
     config.genesisBlock = "GenesisBlockHashPlaceholder";
 
     std::cout << "✅ Blockchain Network Setup Complete!\n";
