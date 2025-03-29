@@ -281,10 +281,11 @@ void displayMITLicense() {
     std::cout << "-----------------------------------------------\n";
 }
 
+
 // Function to simulate Coin Ox Address Generation
 std::string generateOxAddress() {
     // In real application, this would be a cryptographic address
-    return "0x" + std::to_string(rand() % 10000000000000000); // Placeholder
+    return "0x" + std::to_string(rand() % 7000000000; // Placeholder
 }
 
 // Function to generate Ox ID
