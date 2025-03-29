@@ -73,6 +73,229 @@ private:
     std::vector<Transaction> transactions;
     double mining_reward = 50.0;  // Reward for mining a block
     int difficulty = 4;  // Number of leading zeros required for proof of work
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstdlib>
+#include <thread>
+#include <memory>
+#include <future>
+#include <chrono>
+#include <vector>
+#include <mutex>
+#include <sstream>
+#include <queue>
+#include <boost/asio.hpp>
+#include <openssl/sha.h>
+#include <openssl/evp.h>
+#include <curl/curl.h>
+
+using namespace boost::asio;
+using ip::tcp;
+
+std::mutex mtx;
+std::queue<std::string> transactionQueue;
+
+struct BlockchainConfig {
+    std::string coinName = "Contractor-coin";
+    std::string oxAddress;
+    std::string oxID;
+    std::string genesisBlock;
+    double totalSupply = 7000000000;
+    double burnRate = 0.02;
+    double ownerVault = 1000000000;
+    double userVault = 6000000000;
+    double transactionFee = 0.005;
+    double maintenanceFee = 0.00001;
+    std::string maintenanceVault = "0xMaintenanceVault";
+    std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
+};
+
+struct Transaction {
+    std::string sender;
+    std::string receiver;
+    double amount;
+    double fee;
+    double burned;
+    double maintenance;
+    double team_profit;
+    time_t timestamp;
+
+    std::string toString() const {
+        return "Sender: " + sender + " | Receiver: " + receiver + " | Amount: " + std::to_string(amount) +
+               " | Fee: " + std::to_string(fee) + " | Burned: " + std::to_string(burned);
+    }
+};
+
+struct Block {
+    int index;
+    time_t timestamp;
+    std::vector<Transaction> transactions;
+    int proof;
+    std::string previous_hash;
+    std::string hash;
+};
+
+class Blockchain {
+private:
+    std::vector<Block> chain;
+    std::vector<Transaction> transactions;
+    double mining_reward = 50.0;
+    int difficulty = 4;
+
+    std::string calculate_hash(const Block& block) {
+        std::stringstream ss;
+        ss << block.index << block.timestamp << block.previous_hash << block.proof;
+        for (const auto& tx : block.transactions) {
+            ss << tx.sender << tx.receiver << tx.amount << tx.fee << tx.burned;
+        }
+        return sha256(ss.str());
+    }
+
+public:
+    Blockchain() {
+        create_genesis_block();
+    }
+
+    void create_genesis_block() {
+        Block genesis;
+        genesis.index = 1;
+        genesis.timestamp = time(nullptr);
+        genesis.previous_hash = "0";
+        genesis.proof = 1;
+        genesis.hash = calculate_hash(genesis);
+        chain.push_back(genesis);
+    }
+
+    Block get_previous_block() {
+        return chain.back();
+    }
+
+    void add_transaction(std::string sender, std::string receiver, double amount) {
+        double fee = amount * BlockchainConfig().transactionFee;
+        double burned = amount * BlockchainConfig().burnRate;
+        double net_amount = amount - (fee + burned);
+        Transaction tx = {sender, receiver, net_amount, fee, burned, BlockchainConfig().maintenanceFee, BlockchainConfig().transactionFee};
+        transactions.push_back(tx);
+    }
+
+    void mine_block(std::string miner_address) {
+        Block previous_block = get_previous_block();
+        int proof = proof_of_work(previous_block.proof);
+        std::string previous_hash = previous_block.hash;
+
+        add_transaction("Network", miner_address, mining_reward);
+
+        Block new_block;
+        new_block.index = chain.size() + 1;
+        new_block.timestamp = time(nullptr);
+        new_block.transactions = transactions;
+        new_block.proof = proof;
+        new_block.previous_hash = previous_hash;
+        new_block.hash = calculate_hash(new_block);
+        transactions.clear();
+        chain.push_back(new_block);
+    }
+
+    void print_chain() {
+        for (const auto& block : chain) {
+            std::cout << "Index: " << block.index << "\nTimestamp: " << block.timestamp
+                      << "\nPrevious Hash: " << block.previous_hash
+                      << "\nHash: " << block.hash << "\n\n";
+            for (const auto& tx : block.transactions) {
+                std::cout << tx.toString() << "\n";
+            }
+        }
+    }
+
+    std::string sha256(const std::string& input) {
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        SHA256(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), hash);
+        std::stringstream ss;
+        for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+            ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+        }
+        return ss.str();
+    }
+
+    int proof_of_work(int previous_proof) {
+        int new_proof = 1;
+        bool check_proof = false;
+        while (!check_proof) {
+            std::string hash_attempt = sha256(std::to_string(new_proof * new_proof - previous_proof * previous_proof));
+            if (hash_attempt.substr(0, difficulty) == std::string(difficulty, '0')) {
+                check_proof = true;
+            } else {
+                new_proof++;
+            }
+        }
+        return new_proof;
+    }
+
+    void saveBlockchain(const Blockchain& chain) {
+        std::ofstream file("blockchain_data.dat", std::ios::binary);
+        if (file.is_open()) {
+            file.write(reinterpret_cast<const char*>(&chain), sizeof(chain));
+            file.close();
+        }
+    }
+
+    void loadBlockchain(Blockchain& chain) {
+        std::ifstream file("blockchain_data.dat", std::ios::binary);
+        if (file.is_open()) {
+            file.read(reinterpret_cast<char*>(&chain), sizeof(chain));
+            file.close();
+        }
+    }
+
+    void startNodeServer() {
+        boost::asio::io_context ioContext;
+        tcp::acceptor acceptor(ioContext, tcp::endpoint(tcp::v4(), 8080));
+        while (true) {
+            tcp::socket socket(ioContext);
+            acceptor.accept(socket);
+            std::string message = "Connected to Contractor-Coin Node";
+            boost::asio::write(socket, boost::asio::buffer(message));
+        }
+    }
+
+    void deployNetwork() {
+        system("docker-compose up -d");
+    }
+};
+
+int main() {
+    Blockchain blockchain;
+
+    blockchain.loadBlockchain(blockchain);
+    blockchain.startNodeServer();
+    blockchain.deployNetwork();
+    blockchain.saveBlockchain(blockchain);
+
+    blockchain.add_transaction("Alice", "Bob", 1000);
+    blockchain.add_transaction("Bob", "Charlie", 500);
+
+    blockchain.mine_block("Miner1");
+
+    blockchain.print_chain();
+
+    return 0;
+}
+
+void autoDeployment() {
+    try {
+        std::cout << "🚀 Setting up Blockchain Network...\n";
+
+        auto config = std::make_shared<BlockchainConfig>();
+
+        config->oxAddress = generateOxAddress();
+        config->oxID = generateOxID();
+
+        createGenesisBlock(*config);
+    } catch (const std::exception& e) {
+        std::cerr << "Error during auto-deployment: " << e.what() << std::endl;
+    }
+}
 
     // Function to calculate hash of a block
     std::string calculate_hash(const Block& block) {
@@ -355,29 +578,74 @@ void displayMITLicense() {
 
 // Missing Features for Full Deployment
 
-// ✅ Persistent Blockchain Storage  
-// The blockchain currently lacks persistent storage for blocks and transactions.  
-// Implement a database solution such as SQLite, LevelDB, or a file-based ledger.  
+// ✅ Persistent Blockchain Storage
+// The blockchain currently lacks persistent storage for blocks and transactions.
+// Implement a database solution such as SQLite, LevelDB, or a file-based ledger.
+class BlockchainStorage {
+    // Implementation of database storage for blocks and transactions
+    void storeBlock(Block block);
+    Block retrieveBlock(int blockID);
+};
 
-// ✅ Peer-to-Peer (P2P) Networking  
-// The server listens for connections but does not sync blocks with peers.  
-// A node discovery protocol is required to enable full network synchronization.  
+// ✅ Peer-to-Peer (P2P) Networking
+// The server listens for connections but does not sync blocks with peers.
+// A node discovery protocol is required to enable full network synchronization.
+class PeerToPeerNetwork {
+public:
+    // Start listening for incoming connections from peers
+    void startServer();
+    // Sync blocks with connected peers
+    void syncBlocksWithPeers();
+    // Handle node discovery and connection to peers
+    void discoverPeers();
+};
 
-// ✅ Block Validation & Chain Consensus  
-// Transactions are not validated, and double-spending is possible.  
-// Implement a consensus algorithm such as Proof of Work (PoW) for security.  
+// ✅ Block Validation & Chain Consensus
+// Transactions are not validated, and double-spending is possible.
+// Implement a consensus algorithm such as Proof of Work (PoW) for security.
+class Consensus {
+public:
+    // Validate the block's hash and transactions before adding it to the blockchain
+    bool validateBlock(Block block);
+    // Proof of Work algorithm to find valid blocks
+    bool proofOfWork(Block block);
+};
 
-// ✅ Cryptographic Hashing  
-// The current implementation uses std::hash, which is not cryptographically secure.  
-// Replace it with SHA-256 for Bitcoin-like security.  
+// ✅ Cryptographic Hashing
+// The current implementation uses std::hash, which is not cryptographically secure.
+// Replace it with SHA-256 for Bitcoin-like security.
+#include <openssl/sha.h>
+class Crypto {
+public:
+    // Hash a block using SHA-256
+    std::string sha256Hash(const std::string& input);
+};
 
-// ✅ Wallet & Transaction Handling  
-// There is no mechanism for managing user wallets, balances, or signed transactions.  
-// Integrate a cryptographic key system, such as secp256k1 for ECDSA signatures.  
+// ✅ Wallet & Transaction Handling
+// There is no mechanism for managing user wallets, balances, or signed transactions.
+// Integrate a cryptographic key system, such as secp256k1 for ECDSA signatures.
+class Wallet {
+public:
+    // Generate a new cryptographic keypair (public/private)
+    std::pair<std::string, std::string> generateKeyPair();
+    // Sign a transaction with the private key
+    std::string signTransaction(const std::string& transactionData, const std::string& privateKey);
+    // Verify the transaction signature with the public key
+    bool verifyTransaction(const std::string& transactionData, const std::string& signature, const std::string& publicKey);
+};
 
-// ✅ Automated Network Deployment  
-// The script clones a Git repository and executes commands but lacks multi-node deployment.  
-// Utilize a configuration system like Docker or Kubernetes for scalable deployment.  
+// ✅ Automated Network Deployment
+// The script clones a Git repository and executes commands but lacks multi-node deployment.
+// Utilize a configuration system like Docker or Kubernetes for scalable deployment.
+class NetworkDeployment {
+public:
+    // Initialize and configure the multi-node blockchain network
+    void setupMultiNodeNetwork();
+    // Deploy the blockchain on the network using Docker or Kubernetes
+    void deployNetwork();
+    // Execute the necessary commands to deploy nodes
+    void executeDeploymentCommands();
+}; 
 
 // Function to simulate Coin Ox Address Generation
 std::string generateOxAddress() {
