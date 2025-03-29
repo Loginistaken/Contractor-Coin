@@ -83,6 +83,78 @@ private:
         }
         return sha256(ss.str());
     }
+// === Blockchain Persistent Storage ===
+#include <fstream>
+#include <iostream>
+#include "blockchain.h"
+
+void saveBlockchain(const Blockchain& chain) {
+    std::ofstream file("blockchain_data.dat", std::ios::binary);
+    if (file.is_open()) {
+        file.write(reinterpret_cast<const char*>(&chain), sizeof(chain));
+        file.close();
+    }
+}
+
+void loadBlockchain(Blockchain& chain) {
+    std::ifstream file("blockchain_data.dat", std::ios::binary);
+    if (file.is_open()) {
+        file.read(reinterpret_cast<char*>(&chain), sizeof(chain));
+        file.close();
+    }
+}
+
+// === P2P Networking ===
+#include <boost/asio.hpp>
+using boost::asio::ip::tcp;
+
+void startNodeServer() {
+    boost::asio::io_context ioContext;
+    tcp::acceptor acceptor(ioContext, tcp::endpoint(tcp::v4(), 8080));
+    while (true) {
+        tcp::socket socket(ioContext);
+        acceptor.accept(socket);
+        std::string message = "Connected to Contractor-Coin Node";
+        boost::asio::write(socket, boost::asio::buffer(message));
+    }
+}
+
+// === Cryptographic Hashing ===
+#include <openssl/sha.h>
+std::string sha256(const std::string& data) {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256(reinterpret_cast<const unsigned char*>(data.c_str()), data.size(), hash);
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << static_cast<int>(hash[i]);
+    }
+    return ss.str();
+}
+
+// === Wallet and Transactions ===
+#include <secp256k1.h>
+secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+
+std::vector<unsigned char> signTransaction(const std::string& txData, const std::vector<unsigned char>& privateKey) {
+    secp256k1_ecdsa_signature signature;
+    secp256k1_ecdsa_sign(ctx, &signature, reinterpret_cast<const unsigned char*>(txData.c_str()), privateKey.data(), nullptr, nullptr);
+    return std::vector<unsigned char>(signature.data, signature.data + sizeof(signature.data));
+}
+
+// === Automated Deployment ===
+#include <cstdlib>
+void deployNetwork() {
+    system("docker-compose up -d"); // Automatically deploys nodes using Docker
+}
+
+int main() {
+    Blockchain chain;
+    loadBlockchain(chain);
+    startNodeServer();
+    deployNetwork();
+    saveBlockchain(chain);
+    return 0;
+}
 
     // Function to calculate SHA256 hash
     std::string sha256(const std::string& input) {
