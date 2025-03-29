@@ -32,9 +32,9 @@ struct BlockchainConfig {
     double totalSupply = 7000000000;  // Total supply of coins
     double burnRate = 0.02;  // Default burn rate (2%)
     double ownerVault = 1000000000;  // Owner's vault (1 billion coins)
-    double userVault = 6000000000;  // User's vault (1 trillion coins)
-    double transactionFee = 0.01;  // 1% transaction fee for team profit
-    double maintenanceFee = 0.0002;  // 0.02% maintenance fee
+    double userVault = 6000000000;  // User's vault (6 billion coins)
+    double transactionFee = 0.005;  // 1% transaction fee for team profit
+    double maintenanceFee = 0.00001;  // 0.002% maintenance fee
     std::string maintenanceVault = "0xMaintenanceVault";  // Vault address for maintenance fee
     std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
 };
@@ -281,6 +281,31 @@ void displayMITLicense() {
     std::cout << "-----------------------------------------------\n";
 }
 
+// Missing Features for Full Deployment
+
+// ✅ Persistent Blockchain Storage  
+// The blockchain currently lacks persistent storage for blocks and transactions.  
+// Implement a database solution such as SQLite, LevelDB, or a file-based ledger.  
+
+// ✅ Peer-to-Peer (P2P) Networking  
+// The server listens for connections but does not sync blocks with peers.  
+// A node discovery protocol is required to enable full network synchronization.  
+
+// ✅ Block Validation & Chain Consensus  
+// Transactions are not validated, and double-spending is possible.  
+// Implement a consensus algorithm such as Proof of Work (PoW) for security.  
+
+// ✅ Cryptographic Hashing  
+// The current implementation uses std::hash, which is not cryptographically secure.  
+// Replace it with SHA-256 for Bitcoin-like security.  
+
+// ✅ Wallet & Transaction Handling  
+// There is no mechanism for managing user wallets, balances, or signed transactions.  
+// Integrate a cryptographic key system, such as secp256k1 for ECDSA signatures.  
+
+// ✅ Automated Network Deployment  
+// The script clones a Git repository and executes commands but lacks multi-node deployment.  
+// Utilize a configuration system like Docker or Kubernetes for scalable deployment.  
 
 // Function to simulate Coin Ox Address Generation
 std::string generateOxAddress() {
