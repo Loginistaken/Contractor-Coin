@@ -112,6 +112,30 @@ public:
         return validTxs;
     }
 };
+#include <iostream>
+#include <string>
+
+bool userConsent() {
+    std::string response;
+    std::cout << "Would you like to connect to the peer? (yes/no): ";
+    std::cin >> response;
+    if (response == "yes") {
+        return true; // User consented
+    }
+    std::cerr << "Connection denied by user." << std::endl;
+    return false; // User declined
+}
+
+int main() {
+    if (userConsent()) {
+        // Proceed with the connection
+        connect_to_peer("192.168.1.1", 8080);
+    } else {
+        // Handle denial
+        std::cerr << "Connection request failed." << std::endl;
+    }
+    return 0;
+}
 
 // Block Structure for the Blockchain
 struct Block {
