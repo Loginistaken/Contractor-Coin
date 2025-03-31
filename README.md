@@ -89,7 +89,31 @@ private:
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <curl/curl.h>
+#include <leveldb/db.h>
 
+class BlockchainDB {
+public:
+    leveldb::DB* db;
+    leveldb::Options options;
+    
+    BlockchainDB() {
+        options.create_if_missing = true;
+        leveldb::Status status = leveldb::DB::Open(options, "./blockchain_db", &db);
+        if (!status.ok()) {
+            std::cerr << "Unable to open database: " << status.ToString() << std::endl;
+        }
+    }
+
+    void storeBlock(const std::string& blockHash, const std::string& blockData) {
+        db->Put(leveldb::WriteOptions(), blockHash, blockData);
+    }
+    
+    std::string getBlock(const std::string& blockHash) {
+        std::string blockData;
+        db->Get(leveldb::ReadOptions(), blockHash, &blockData);
+        return blockData;
+    }
+};
 using namespace boost::asio;
 using ip::tcp;
 
@@ -341,7 +365,16 @@ void startNodeServer() {
         boost::asio::write(socket, boost::asio::buffer(message));
     }
 }
+#include <boost/asio.hpp>
 
+class PeerNode {
+public:
+    std::string nodeIP;
+    PeerNode(std::string ip) : nodeIP(ip) {}
+    void requestBlockSync() {
+        // Implement block syncing over Boost.Asio
+    }
+};
 // === Cryptographic Hashing ===
 #include <openssl/sha.h>
 std::string sha256(const std::string& data) {
@@ -474,6 +507,20 @@ int main() {
     // Adding transactions to the blockchain
     blockchain.add_transaction("Alice", "Bob", 1000);
     blockchain.add_transaction("Bob", "Charlie", 500);
+    #include <unordered_map>
+
+class UTXOSet {
+public:
+    std::unordered_map<std::string, int> UTXO;
+    
+    void addUTXO(std::string txID, int amount) {
+        UTXO[txID] = amount;
+    }
+    
+    bool validateTransaction(std::string txID, int amount) {
+        return (UTXO.find(txID) != UTXO.end() && UTXO[txID] >= amount);
+    }
+};
     
     // Mining a new block after transactions
     blockchain.mine_block("Miner1");
@@ -646,7 +693,23 @@ public:
     // Execute the necessary commands to deploy nodes
     void executeDeploymentCommands();
 }; 
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
 
+class Wallet {
+public:
+    RSA* keyPair;
+    Wallet() {
+        keyPair = RSA_generate_key(2048, RSA_F4, nullptr, nullptr);
+    }
+    std::string getPublicKey() {
+        BIO* bio = BIO_new(BIO_s_mem());
+        PEM_write_bio_RSA_PUBKEY(bio, keyPair);
+        char* keyData;
+        long len = BIO_get_mem_data(bio, &keyData);
+        return std::string(keyData, len);
+    }
+};
 // Function to simulate Coin Ox Address Generation
 std::string generateOxAddress() {
     // In real application, this would be a cryptographic address
