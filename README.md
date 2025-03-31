@@ -15,10 +15,17 @@
 #include <openssl/evp.h>  // For SHA256
 #include <cstdlib>
 #include <curl/curl.h>  // For IPFS and Firebase integration
-
+#include <iostream>
+#include <vector>
+#include <map>
+#include <unordered_map>
+#include "crypto.h"  // Assumed cryptographic functions (signing, hashing)
+#include "blockchain.h"  // Core blockchain functions
+#include "p2p_network.h"  // Peer-to-peer communication
+#include "storage.h"  // LevelDB or SQLite-based persistent storage
 using namespace boost::asio;
 using ip::tcp;
-
+using namespace std;
 // Mutex for thread safety
 std::mutex mtx;  
 std::queue<std::string> transactionQueue;  // Simple transaction queue
@@ -53,6 +60,56 @@ struct Transaction {
     std::string toString() const {
         return "Sender: " + sender + " | Receiver: " + receiver + " | Amount: " + std::to_string(amount) +
                " | Fee: " + std::to_string(fee) + " | Burned: " + std::to_string(burned);
+    }
+};
+class Transaction {
+public:
+    string txID;
+    string sender;
+    string receiver;
+    double amount;
+    vector<string> inputs;  // References to UTXOs
+    map<string, double> outputs; // New UTXOs
+    string signature;
+    
+    Transaction(string sender, string receiver, double amount) {
+        this->sender = sender;
+        this->receiver = receiver;
+        this->amount = amount;
+        this->txID = generateTxID();  // Unique transaction hash
+    }
+    
+    string generateTxID() {
+        return sha256(sender + receiver + to_string(amount));
+    }
+};
+
+class Mempool {
+public:
+    unordered_map<string, Transaction> pendingTxs;
+    
+    void addTransaction(Transaction tx) {
+        if (validateTransaction(tx)) {
+            pendingTxs[tx.txID] = tx;
+        }
+    }
+    
+    bool validateTransaction(Transaction tx) {
+        // Check for double-spending using UTXO model
+        for (const string& input : tx.inputs) {
+            if (usedUTXOs.find(input) != usedUTXOs.end()) {
+                return false;  // Double spending detected
+            }
+        }
+        return true;
+    }
+    
+    vector<Transaction> getValidTransactions() {
+        vector<Transaction> validTxs;
+        for (auto& pair : pendingTxs) {
+            validTxs.push_back(pair.second);
+        }
+        return validTxs;
     }
 };
 
@@ -623,56 +680,7 @@ void displayMITLicense() {
     std::cout << "-----------------------------------------------\n";
 }
 
-// Missing Features for Full Deployment
 
-// ✅ Persistent Blockchain Storage
-// The blockchain currently lacks persistent storage for blocks and transactions.
-// Implement a database solution such as SQLite, LevelDB, or a file-based ledger.
-class BlockchainStorage {
-    // Implementation of database storage for blocks and transactions
-    void storeBlock(Block block);
-    Block retrieveBlock(int blockID);
-};
-
-// ✅ Peer-to-Peer (P2P) Networking
-// The server listens for connections but does not sync blocks with peers.
-// A node discovery protocol is required to enable full network synchronization.
-class PeerToPeerNetwork {
-public:
-    // Start listening for incoming connections from peers
-    void startServer();
-    // Sync blocks with connected peers
-    void syncBlocksWithPeers();
-    // Handle node discovery and connection to peers
-    void discoverPeers();
-};
-
-// ✅ Block Validation & Chain Consensus
-// Transactions are not validated, and double-spending is possible.
-// Implement a consensus algorithm such as Proof of Work (PoW) for security.
-class Consensus {
-public:
-    // Validate the block's hash and transactions before adding it to the blockchain
-    bool validateBlock(Block block);
-    // Proof of Work algorithm to find valid blocks
-    bool proofOfWork(Block block);
-};
-
-// ✅ Cryptographic Hashing
-// The current implementation uses std::hash, which is not cryptographically secure.
-// Replace it with SHA-256 for Bitcoin-like security.
-#include <openssl/sha.h>
-class Crypto {
-public:
-    // Hash a block using SHA-256
-    std::string sha256Hash(const std::string& input);
-};
-
-// ✅ Wallet & Transaction Handling
-// There is no mechanism for managing user wallets, balances, or signed transactions.
-// Integrate a cryptographic key system, such as secp256k1 for ECDSA signatures.
-class Wallet {
-public:
     // Generate a new cryptographic keypair (public/private)
     std::pair<std::string, std::string> generateKeyPair();
     // Sign a transaction with the private key
