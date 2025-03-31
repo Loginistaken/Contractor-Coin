@@ -152,7 +152,23 @@ class BlockchainDB {
 public:
     leveldb::DB* db;
     leveldb::Options options;
+    class Blockchain {
+public:
+    vector<Block> chain;
+    Mempool mempool;
     
+    void mineBlock(string minerAddress) {
+        vector<Transaction> transactions = mempool.getValidTransactions();
+        Block newBlock = createBlock(transactions);
+        chain.push_back(newBlock);
+        rewardMiner(minerAddress);
+    }
+    
+    void rewardMiner(string minerAddress) {
+        Transaction rewardTx("network", minerAddress, 1.0);  // 1 coin reward
+        mempool.addTransaction(rewardTx);
+    }
+};
     BlockchainDB() {
         options.create_if_missing = true;
         leveldb::Status status = leveldb::DB::Open(options, "./blockchain_db", &db);
@@ -422,6 +438,11 @@ void startNodeServer() {
         boost::asio::write(socket, boost::asio::buffer(message));
     }
 }
+class P2PNetwork {
+public:
+    void syncBlocks(Blockchain& blockchain) {
+        cout << "Syncing blockchain with peers..." << endl;
+        // Logic to request missing blocks from connected peers
 #include <boost/asio.hpp>
 
 class PeerNode {
@@ -784,8 +805,23 @@ void handleRequest(const std::string& request) {
     // Handle other JSON-RPC logic here
     std::cout << "Request successfully processed." << std::endl;
 }
-
-
+// ---------------- Storage System (LevelDB/SQLite) ----------------
+class Storage {
+public:
+    void saveBlock(Block block) {
+        // Save block data persistently (LevelDB/SQLite)
+    }
+};
+// ---------------- Main Function ----------------
+int main() {
+    Blockchain contractorCoin;
+    P2PNetwork network;
+    Storage storage;
+    
+    contractorCoin.mineBlock("miner1");
+    network.syncBlocks(contractorCoin);
+    
+    return 0;
  ./blockchain_interaction
   python interact_with_blockchain.py
 npm install axios
