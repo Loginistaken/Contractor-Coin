@@ -11,6 +11,7 @@
 #include <sstream>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <map>
 #include <asio.hpp>
 #include <crypto++/sha3.h>  // SHA-3 header from Crypto++ library
@@ -122,6 +123,7 @@ public:
 class Mempool {
 public:
     unordered_map<string, TransactionClass> pendingTxs;
+    unordered_set<string> usedUTXOs; // Track used UTXOs
     
     void addTransaction(TransactionClass tx) {
         if (validateTransaction(tx)) {
@@ -136,6 +138,7 @@ public:
                 return false;  // Double spending detected
             }
         }
+        // Additional validation logic can be added here
         return true;
     }
     
@@ -207,23 +210,31 @@ struct Block {
 class EL40_Blockchain {
 private:
     std::vector<Block> chain;
-    std::unordered_map<std::string, std::string> transactionLedger; // External tracking
+    std::unordered_map<std::string, double> ledger;
     std::mutex chainMutex; // Mutex for thread safety
+    BlockchainDB db; // Database for storing blocks
 
 public:
     EL40_Blockchain() {
         chain.push_back(createVariableBlock());
+        ledger["Genesis"] = 1000; // Example initial ledger entry
     }
 
     Block createVariableBlock() {
         return Block(0, "Variable-Block", "0");
     }
 
-    void addBlock(const std::string& data) {
+    void addBlock(const std::vector<Transaction>& transactions, const std::string& minerAddress = "MinerNode") {
         std::lock_guard<std::mutex> lock(chainMutex); // Ensure thread safety
-        if (approveBlockAI(data)) { // AI approval process
+        if (approveBlockAI(transactionsToString(transactions))) { // AI approval process
             Block last = chain.back();
-            Block newBlock(chain.size(), data, last.hash);
+            
+            std::vector<Transaction> blockTxs = transactions;
+            // Add block reward
+            Transaction rewardTx = {"Network", minerAddress, 25.0, 0, 0, 0, 0, std::time(nullptr)}; // Example block reward
+            blockTxs.push_back(rewardTx);
+
+            Block newBlock(chain.size(), transactionsToString(blockTxs), last.hash);
 
             // Mine the block in fragments with difficulty adjustment
             int difficulty = adjustDifficulty(chain.size());
@@ -232,7 +243,14 @@ public:
             }
 
             chain.push_back(newBlock);
-            transactionLedger[newBlock.hash] = data; // Store transaction externally
+            for (const auto& tx : blockTxs) {
+                ledger[tx.sender] -= tx.amount;
+                ledger[tx.receiver] += tx.amount;
+            }
+
+            db.storeBlock(newBlock.hash, transactionsToString(blockTxs)); // Store block in the database
+
+            std::cout << "[+] Block added by " << minerAddress << " with reward 25.0 Contractor-coin\n";
         } else {
             std::cout << "Block rejected by AI approval process.\n";
         }
@@ -257,6 +275,15 @@ public:
     void fetchExternalTransactions() {
         std::cout << "Fetching external transactions using Python scraper...\n";
         system("python3 scraper.py"); // Calls external Python scraper
+    }
+
+private:
+    std::string transactionsToString(const std::vector<Transaction>& transactions) const {
+        std::string result;
+        for (const auto& tx : transactions) {
+            result += tx.toString();
+        }
+        return result;
     }
 };
 
@@ -287,15 +314,30 @@ void startServer(unsigned short port) {
             asio::ip::tcp::socket socket(io_context);
             acceptor.accept(socket);
             std::cout << "New node connected!\n";
+            std::thread(handleClient, std::move(socket)).detach();
         }
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Server Error: " << e.what() << "\n";
+    }
+}
+
+// Secure Communication Placeholder
+void handleClient(asio::ip::tcp::socket socket) {
+    try {
+        asio::streambuf buffer;
+        asio::read_until(socket, buffer, "\n");
+        std::istream input(&buffer);
+        std::string message;
+        std::getline(input, message);
+        std::cout << "Received message: " << message << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Client Error: " << e.what() << "\n";
     }
 }
 
 // Simulate node network with multithreading (each thread represents a node)
 void runNode(EL40_Blockchain& blockchain, const std::string& blockData) {
-    blockchain.addBlock(blockData);
+    blockchain.addBlock({Transaction{"Node1", "Node2", 50.0, 0, 0, 0, 0, std::time(nullptr)}});
 }
 
 // Display exit popup with MIT License
