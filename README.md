@@ -16,6 +16,9 @@
 #include <asio.hpp>
 #include <crypto++/sha3.h>  // SHA-3 header from Crypto++ library
 #include <crypto++/hex.h>    // Hex encoding (to display the hash)
+#include <crypto++/rsa.h>    // RSA for digital signatures
+#include <crypto++/osrng.h>  // AutoSeededRandomPool for key generation
+#include <crypto++/base64.h> // Base64 encoding/decoding
 #include <leveldb/db.h>
 #include "crypto.h"  // Assumed cryptographic functions (signing, hashing)
 #include "blockchain.h"  // Core blockchain functions
@@ -30,14 +33,10 @@ using namespace std;
 std::string EL40_Hash(const std::string& input) {
     using namespace CryptoPP;
 
-    // Initialize SHA-3
     SHA3_256 hash;
     byte digest[SHA3_256::DIGESTSIZE];
-
-    // Calculate the hash
     hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
 
-    // Convert digest to hex string for display
     HexEncoder encoder;
     std::string output;
     encoder.Attach(new StringSink(output));
@@ -45,6 +44,39 @@ std::string EL40_Hash(const std::string& input) {
     encoder.MessageEnd();
 
     return output;  // Return the hex-encoded hash
+}
+
+// Digital Signature Utility
+std::string signTransaction(const std::string& data, const CryptoPP::RSA::PrivateKey& privateKey) {
+    CryptoPP::AutoSeededRandomPool rng;
+    std::string signature;
+
+    CryptoPP::RSASSA_PKCS1v15_SHA_Signer signer(privateKey);
+    CryptoPP::StringSource ss(data, true,
+        new CryptoPP::SignerFilter(rng, signer,
+            new CryptoPP::StringSink(signature)
+        )
+    );
+    return signature;
+}
+
+bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
+    CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);
+    bool result = false;
+
+    try {
+        CryptoPP::StringSource ss(signature + data, true,
+            new CryptoPP::SignatureVerificationFilter(
+                verifier,
+                new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
+                CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
+            )
+        );
+    } catch (const CryptoPP::Exception& e) {
+        std::cerr << "Error verifying transaction: " << e.what() << '\n';
+        return false;
+    }
+    return result;
 }
 
 // Machine Learning Model Placeholder for Block Approval
@@ -73,8 +105,8 @@ struct BlockchainConfig {
     double burnRate = 0.02;  // Default burn rate (2%)
     double ownerVault = 1000000000;  // Owner's vault (1 billion coins)
     double userVault = 6000000000;  // User's vault (6 billion coins)
-    double transactionFee = 0.005;  // 1% transaction fee for team profit
-    double maintenanceFee = 0.00001;  // 0.002% maintenance fee
+    double transactionFee = 0.005;  // 0.5% transaction fee for team profit
+    double maintenanceFee = 0.00001;  // 0.001% maintenance fee
     std::string maintenanceVault = "0xMaintenanceVault";  // Vault address for maintenance fee
     std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
 };
@@ -84,46 +116,41 @@ struct Transaction {
     std::string sender;
     std::string receiver;
     double amount;
-    double fee;
-    double burned;
-    double maintenance;
-    double team_profit;
-    time_t timestamp;
+    std::string signature;
 
     std::string toString() const {
-        return "Sender: " + sender + " | Receiver: " + receiver + " | Amount: " + std::to_string(amount) +
-               " | Fee: " + std::to_string(fee) + " | Burned: " + std::to_string(burned);
+        return sender + receiver + std::to_string(amount) + signature;
     }
 };
 
 // Transaction Class
 class TransactionClass {
 public:
-    string txID;
-    string sender;
-    string receiver;
+    std::string txID;
+    std::string sender;
+    std::string receiver;
     double amount;
-    vector<string> inputs;  // References to UTXOs
-    map<string, double> outputs; // New UTXOs
-    string signature;
+    std::vector<std::string> inputs;  // References to UTXOs
+    std::map<std::string, double> outputs; // New UTXOs
+    std::string signature;
     
-    TransactionClass(string sender, string receiver, double amount) {
+    TransactionClass(std::string sender, std::string receiver, double amount) {
         this->sender = sender;
         this->receiver = receiver;
         this->amount = amount;
         this->txID = generateTxID();  // Unique transaction hash
     }
     
-    string generateTxID() {
-        return EL40_Hash(sender + receiver + to_string(amount));
+    std::string generateTxID() {
+        return EL40_Hash(sender + receiver + std::to_string(amount));
     }
 };
 
 // Mempool Class (include here detailed transaction validation and management)
 class Mempool {
 public:
-    unordered_map<string, TransactionClass> pendingTxs;
-    unordered_set<string> usedUTXOs; // Track used UTXOs
+    std::unordered_map<std::string, TransactionClass> pendingTxs;
+    std::unordered_set<std::string> usedUTXOs; // Track used UTXOs
     
     void addTransaction(TransactionClass tx) {
         if (validateTransaction(tx)) {
@@ -133,7 +160,7 @@ public:
     
     bool validateTransaction(TransactionClass tx) {
         // Check for double-spending using UTXO model
-        for (const string& input : tx.inputs) {
+        for (const std::string& input : tx.inputs) {
             if (usedUTXOs.find(input) != usedUTXOs.end()) {
                 return false;  // Double spending detected
             }
@@ -142,8 +169,8 @@ public:
         return true;
     }
     
-    vector<TransactionClass> getValidTransactions() {
-        vector<TransactionClass> validTxs;
+    std::vector<TransactionClass> getValidTransactions() {
+        std::vector<TransactionClass> validTxs;
         for (auto& pair : pendingTxs) {
             validTxs.push_back(pair.second);
         }
@@ -180,26 +207,36 @@ public:
 struct Block {
     int index;
     std::string timestamp;
-    std::string data;
+    std::vector<Transaction> transactions;
     std::string prevHash;
     std::string hash;
     int nonce;
     std::vector<std::string> fragmentHashes; // Fragment hashes
 
-    Block(int idx, const std::string& dataInput, const std::string& prev)
-        : index(idx), data(dataInput), prevHash(prev), nonce(0) {
+    Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
+        : index(idx), transactions(txs), prevHash(prev), nonce(0) {
         timestamp = std::to_string(std::time(nullptr));
         hash = generateHash();
     }
 
     std::string generateHash() const {
-        std::string toHash = std::to_string(index) + timestamp + data + prevHash + std::to_string(nonce);
-        return EL40_Hash(toHash);  // Use SHA-3 to generate hash
+        std::string toHash = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
+        for (const auto& tx : transactions) {
+            toHash += tx.toString();
+        }
+        return EL40_Hash(toHash);
     }
 
-    // Mined fragment with difficulty adjustment
+    void mineBlock(int difficulty) {
+        std::string target(difficulty, '0');
+        while (hash.substr(0, difficulty) != target) {
+            nonce++;
+            hash = generateHash();
+        }
+    }
+
     void mineFragment(int difficulty) {
-        std::string fragmentData = data + std::to_string(nonce);
+        std::string fragmentData = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
         std::string fragmentHash = EL40_Hash(fragmentData);
         fragmentHashes.push_back(fragmentHash);
         nonce++;
@@ -216,12 +253,12 @@ private:
 
 public:
     EL40_Blockchain() {
-        chain.push_back(createVariableBlock());
-        ledger["Genesis"] = 1000; // Example initial ledger entry
+        chain.push_back(createGenesisBlock());
+        ledger["Genesis"] = 1000;
     }
 
-    Block createVariableBlock() {
-        return Block(0, "Variable-Block", "0");
+    Block createGenesisBlock() {
+        return Block(0, {}, "0");
     }
 
     void addBlock(const std::vector<Transaction>& transactions, const std::string& minerAddress = "MinerNode") {
@@ -231,16 +268,14 @@ public:
             
             std::vector<Transaction> blockTxs = transactions;
             // Add block reward
-            Transaction rewardTx = {"Network", minerAddress, 25.0, 0, 0, 0, 0, std::time(nullptr)}; // Example block reward
+            Transaction rewardTx = {"Network", minerAddress, 25.0, "Reward"}; // Example block reward
             blockTxs.push_back(rewardTx);
 
-            Block newBlock(chain.size(), transactionsToString(blockTxs), last.hash);
+            Block newBlock(chain.size(), blockTxs, last.hash);
 
-            // Mine the block in fragments with difficulty adjustment
+            // Mine the block with difficulty adjustment
             int difficulty = adjustDifficulty(chain.size());
-            for (int i = 0; i < difficulty; ++i) {
-                newBlock.mineFragment(difficulty);
-            }
+            newBlock.mineBlock(difficulty);
 
             chain.push_back(newBlock);
             for (const auto& tx : blockTxs) {
@@ -261,14 +296,17 @@ public:
         for (const auto& block : chain) {
             std::cout << "Index: " << block.index << "\n"
                       << "Time: " << block.timestamp << "\n"
-                      << "Data: " << block.data << "\n"
-                      << "Hash: " << block.hash << "\n"
                       << "Previous: " << block.prevHash << "\n"
-                      << "Fragment Hashes: ";
+                      << "Hash: " << block.hash << "\n"
+                      << "Transactions: ";
+            for (const auto& tx : block.transactions) {
+                std::cout << tx.sender << " -> " << tx.receiver << ": " << tx.amount << " ";
+            }
+            std::cout << "\nFragment Hashes: ";
             for (const auto& fragHash : block.fragmentHashes) {
                 std::cout << fragHash << " ";
             }
-            std::cout << "\n\n";
+            std::cout << "\nNonce: " << block.nonce << "\n\n";
         }
     }
 
@@ -337,7 +375,8 @@ void handleClient(asio::ip::tcp::socket socket) {
 
 // Simulate node network with multithreading (each thread represents a node)
 void runNode(EL40_Blockchain& blockchain, const std::string& blockData) {
-    blockchain.addBlock({Transaction{"Node1", "Node2", 50.0, 0, 0, 0, 0, std::time(nullptr)}});
+    std::vector<Transaction> transactions = { Transaction{"Node1", "Node2", 50.0, ""} };
+    blockchain.addBlock(transactions);
 }
 
 // Display exit popup with MIT License
@@ -356,36 +395,41 @@ void displayExitPopup() {
 }
 
 int main() {
-    std::cout << "Welcome to the EL-40 Blockchain Program.\n";
+    try {
+        std::cout << "Welcome to the EL-40 Blockchain Program.\n";
 
-    if (!nodeAccessAgreement()) {
-        return 0;
+        if (!nodeAccessAgreement()) {
+            return 0;
+        }
+
+        EL40_Blockchain blockchain;
+
+        // Simulate multiple nodes mining and communicating
+        std::thread node1(runNode, std::ref(blockchain), "Node 1 Block Data");
+        std::thread node2(runNode, std::ref(blockchain), "Node 2 Block Data");
+
+        node1.join();
+        node2.join();
+
+        blockchain.displayChain();
+
+        // Fetch external transactions
+        blockchain.fetchExternalTransactions();
+
+        // Start P2P server in a separate thread
+        std::thread serverThread(startServer, 8080);
+        serverThread.detach();
+
+        // Simulate program work for demonstration (replace with your actual logic)
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        // Call the exit popup before exiting
+        displayExitPopup();
+
+        std::cout << "Exiting program...\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
     }
 
-    EL40_Blockchain blockchain;
-
-    // Simulate multiple nodes mining and communicating
-    std::thread node1(runNode, std::ref(blockchain), "Node 1 Block Data");
-    std::thread node2(runNode, std::ref(blockchain), "Node 2 Block Data");
-
-    node1.join();
-    node2.join();
-
-    blockchain.displayChain();
-
-    // Fetch external transactions
-    blockchain.fetchExternalTransactions();
-
-    // Start P2P server in a separate thread
-    std::thread serverThread(startServer, 8080);
-    serverThread.detach();
-
-    // Simulate program work for demonstration (replace with your actual logic)
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-
-    // Call the exit popup before exiting
-    displayExitPopup();
-
-    std::cout << "Exiting program...\n";
     return 0;
 }
