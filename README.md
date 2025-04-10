@@ -206,6 +206,7 @@ void depositCoins(const std::string& userWallet, const std::string& personalWall
     std::lock_guard<std::mutex> lock(chainMutex); // Ensure thread safety
 class EL40_Blockchain {
 private:
+blockchain.depositCoins("UserWalletAddress", "PersonalWalletAddress", 1000.0, "0xMaintenanceVault", 0.00001);
     // Other members...
 
 public:
