@@ -202,7 +202,21 @@ public:
         return blockData;
     }
 };
+void depositCoins(const std::string& userWallet, const std::string& personalWallet, double amount, const std::string& maintenanceVault, double maintenanceFeeRate) {
+    std::lock_guard<std::mutex> lock(chainMutex); // Ensure thread safety
 
+    // Calculate maintenance fee
+    double maintenanceFee = amount * maintenanceFeeRate;
+
+    // Distribute coins
+    ledger[userWallet] += amount - maintenanceFee; // Deposit to user wallet minus maintenance fee
+    ledger[personalWallet] += maintenanceFee;     // Deposit maintenance fee to personal wallet
+    ledger[maintenanceVault] += maintenanceFee;   // Deposit maintenance fee to vault
+
+    // Log the operation
+    std::cout << "[INFO] Deposited " << amount << " coins into user wallet: " << userWallet << "\n";
+    std::cout << "[INFO] Maintenance fee of " << maintenanceFee << " contributed to vault: " << maintenanceVault << "\n";
+}
 // Block Structure
 struct Block {
     int index;
