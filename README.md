@@ -204,7 +204,16 @@ public:
 };
 void depositCoins(const std::string& userWallet, const std::string& personalWallet, double amount, const std::string& maintenanceVault, double maintenanceFeeRate) {
     std::lock_guard<std::mutex> lock(chainMutex); // Ensure thread safety
+class EL40_Blockchain {
+private:
+    // Other members...
 
+public:
+    // Existing methods...
+
+    // Add this function here
+    void depositCoins(const std::string& userWallet, const std::string& personalWallet, double amount, const std::string& maintenanceVault, double maintenanceFeeRate);
+};
     // Calculate maintenance fee
     double maintenanceFee = amount * maintenanceFeeRate;
 
