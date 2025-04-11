@@ -29,6 +29,16 @@ using ip::tcp;
 using namespace std;
 
 // Custom Hash Function (SHA-3)
+// Custom Hash Function (SHA-3)
+/**
+ * @brief Computes a SHA-3 (256-bit) hash for a given input string.
+ * 
+ * This function takes an input string, calculates its SHA-3 hash, and returns the
+ * hash value as a hexadecimal-encoded string.
+ * 
+ * @param input The input string to be hashed.
+ * @return The hexadecimal-encoded SHA-3 hash of the input.
+ */
 std::string EL40_Hash(const std::string& input) {
     using namespace CryptoPP;
 
@@ -36,46 +46,78 @@ std::string EL40_Hash(const std::string& input) {
     byte digest[SHA3_256::DIGESTSIZE];
     hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
 
+   // HexEncoder to convert the digest into a human-readable hexadecimal format
     HexEncoder encoder;
     std::string output;
-    encoder.Attach(new StringSink(output));
-    encoder.Put(digest, sizeof(digest));
-    encoder.MessageEnd();
+    encoder.Attach(new StringSink(output));  // Attach output string to the encoder
+    encoder.Put(digest, sizeof(digest));     // Encode the raw digest
+    encoder.MessageEnd();                    // Signal the end of encoding
+
+    return output;  // Return the hex-encoded hash
 
     return output;  // Return the hex-encoded hash
 }
 
 // Digital Signature Utility
+ @brief Signs a given data string using RSA private key.
+ * 
+ * This function uses the RSA-PKCS1 v1.5 signing scheme (SHA-256 hashing)
+ * to generate a digital signature for the provided data string.
+ * 
+ * @param data The data to be signed.
+ * @param privateKey The RSA private key used for signing.
+ * @return The generated digital signature as a string.
+ */
 std::string signTransaction(const std::string& data, const CryptoPP::RSA::PrivateKey& privateKey) {
-    CryptoPP::AutoSeededRandomPool rng;
+    CryptoPP::AutoSeededRandomPool rng;  // Random generator for cryptographic operations
     std::string signature;
 
+    // RSA Signer object using the provided private key
     CryptoPP::RSASSA_PKCS1v15_SHA_Signer signer(privateKey);
+
+    // Sign the input data and store the resulting signature
     CryptoPP::StringSource ss(data, true,
         new CryptoPP::SignerFilter(rng, signer,
-            new CryptoPP::StringSink(signature)
+            new CryptoPP::StringSink(signature)  // Attach the signature output
         )
     );
-    return signature;
+
+    return signature;  // Return the generated signature
 }
 
+/**
+ * @brief Verifies the authenticity of a digital signature.
+ * 
+ * This function checks whether a given digital signature matches the provided data
+ * using the corresponding RSA public key.
+ * 
+ * @param data The original data that was signed.
+ * @param signature The digital signature to be verified.
+ * @param publicKey The RSA public key used for verification.
+ * @return True if the signature is valid, otherwise false.
+ */
 bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
-    CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);
+    CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);  // RSA Verifier object
     bool result = false;
 
     try {
+        // Verify the signature by appending it to the data and passing it to the verifier
         CryptoPP::StringSource ss(signature + data, true,
             new CryptoPP::SignatureVerificationFilter(
                 verifier,
+                // Store the verification result in the 'result' variable
                 new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
+                // Options: Throw exceptions and store the result
                 CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
             )
         );
     } catch (const CryptoPP::Exception& e) {
+        // Handle any exceptions that occur during verification
         std::cerr << "Error verifying transaction: " << e.what() << '\n';
-        return false;
+        return false;  // Signature verification failed
     }
-    return result;
+
+    return result;  // Return whether the signature was valid
 }
 
 // Machine Learning Model Placeholder for Block Approval
