@@ -99,7 +99,7 @@ std::queue<std::string> transactionQueue;  // Simple transaction queue
 #include <string>
 #include <map>
 #include <iostream>
-
+ Blockchain Network Configurations struct BlockchainConfig { std::string coinName = "Contractor-coin"; std::string oxAddress; std::string oxID; std::string genesisBlock; double totalSupply = 7000000000; // Total supply of coins double burnRate = 0.02; // Default burn rate (2%) double ownerVault = 1000000000; // Owner's vault (1 billion coins) double userVault = 6000000000; // User's vault (6 billion coins) double transactionFee = 0.005; // 0.5% transaction fee for team profit double maintenanceFee = 0.00001; // 0.001% maintenance fee std::string maintenanceVault = "0xMaintenanceVault"; // Vault address for maintenance fee std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/"; };
 // Blockchain Network Configurations
 struct BlockchainConfig {
     double totalSupply = 7000000000; // Total supply of coins
