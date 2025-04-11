@@ -95,22 +95,39 @@ int adjustDifficulty(int blockHeight) {
 std::mutex mtx;  
 std::queue<std::string> transactionQueue;  // Simple transaction queue
 
+#include <vector>
+#include <string>
+#include <map>
+#include <iostream>
+
 // Blockchain Network Configurations
 struct BlockchainConfig {
-    std::string coinName = "Contractor-coin";
-    std::string oxAddress;
-    std::string oxID;
-    std::string genesisBlock;
-    double totalSupply = 7000000000;  // Total supply of coins
-    double burnRate = 0.02;  // Default burn rate (2%)
-    double ownerVault = 1000000000;  // Owner's vault (1 billion coins)
+    double totalSupply = 7000000000; // Total supply of coins
+    double ownerVault = 1000000000; // Owner's vault (1 billion coins)
     double userVault = 6000000000;  // User's vault (6 billion coins)
-    double transactionFee = 0.005;  // 0.5% transaction fee for team profit
-    double maintenanceFee = 0.00001;  // 0.001% maintenance fee
-    std::string maintenanceVault = "0xMaintenanceVault";  // Vault address for maintenance fee
-    std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
+    std::string maintenanceVault = "0xMaintenanceVault"; // Vault address for maintenance fee
 };
 
+// Ledger to track balances
+std::map<std::string, double> ledger;
+
+// Genesis block creation
+void createGenesisTransaction(BlockchainConfig& config) {
+    // Initialize the owner vault
+    ledger["OwnerVault"] = config.ownerVault;
+
+    // Initialize the user vault
+    ledger["UserVault"] = config.userVault;
+
+    // Initialize the maintenance vault with 0 balance
+    ledger["MaintenanceVault"] = 0.0;
+
+    // Log genesis transaction
+    std::cout << "[INFO] Genesis transaction created:\n";
+    std::cout << "  Owner Vault: " << config.ownerVault << " coins\n";
+    std::cout << "  User Vault: " << config.userVault << " coins\n";
+    std::cout << "  Maintenance Vault: " << ledger["MaintenanceVault"] << " coins\n";
+}
 // Transaction Structure
 struct Transaction {
     std::string sender;
