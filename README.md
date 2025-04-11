@@ -1,4 +1,4 @@
-#include <iostream>
+##include <iostream>
 #include <fstream>
 #include <string>
 #include <cstdlib>
@@ -12,18 +12,17 @@
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
-#include <map>
 #include <asio.hpp>
 #include <crypto++/sha3.h>  // SHA-3 header from Crypto++ library
-#include <crypto++/hex.h>    // Hex encoding (to display the hash)
-#include <crypto++/rsa.h>    // RSA for digital signatures
-#include <crypto++/osrng.h>  // AutoSeededRandomPool for key generation
+#include <crypto++/hex.h>   // Hex encoding (to display the hash)
+#include <crypto++/rsa.h>   // RSA for digital signatures
+#include <crypto++/osrng.h> // AutoSeededRandomPool for key generation
 #include <crypto++/base64.h> // Base64 encoding/decoding
 #include <leveldb/db.h>
-#include "crypto.h"  // Assumed cryptographic functions (signing, hashing)
-#include "blockchain.h"  // Core blockchain functions
-#include "p2p_network.h"  // Peer-to-peer communication
-#include "storage.h"  // LevelDB or SQLite-based persistent storage
+#include "crypto.h"         // Assumed cryptographic functions (signing, hashing)
+#include "blockchain.h"     // Core blockchain functions
+#include "p2p_network.h"    // Peer-to-peer communication
+#include "storage.h"        // LevelDB or SQLite-based persistent storage
 
 using namespace asio;
 using ip::tcp;
@@ -92,36 +91,41 @@ int adjustDifficulty(int blockHeight) {
 }
 
 // Mutex for thread safety
-std::mutex mtx;  
-std::queue<std::string> transactionQueue;  // Simple transaction queue
-
-#include <vector>
-#include <string>
-#include <map>
-#include <iostream>
- Blockchain Network Configurations struct BlockchainConfig { std::string coinName = "Contractor-coin"; std::string oxAddress; std::string oxID; std::string genesisBlock; double totalSupply = 7000000000; // Total supply of coins double burnRate = 0.02; // Default burn rate (2%) double ownerVault = 1000000000; // Owner's vault (1 billion coins) double userVault = 6000000000; // User's vault (6 billion coins) double transactionFee = 0.005; // 0.5% transaction fee for team profit double maintenanceFee = 0.00001; // 0.001% maintenance fee std::string maintenanceVault = "0xMaintenanceVault"; // Vault address for maintenance fee std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/"; };
-// Blockchain Network Configurations
-struct BlockchainConfig {
-    double totalSupply = 7000000000; // Total supply of coins
-    double ownerVault = 1000000000; // Owner's vault (1 billion coins)
-    double userVault = 6000000000;  // User's vault (6 billion coins)
-    std::string maintenanceVault = "0xMaintenanceVault"; // Vault address for maintenance fee
-};
+std::mutex mtx;
 
 // Ledger to track balances
 std::map<std::string, double> ledger;
+std::map<std::string, double> offChainLedger; // Tracks off-chain balances
+
+// Blockchain Network Configurations
+struct BlockchainConfig {
+    std::string coinName = "Contractor-coin";
+    std::string oxAddress;
+    std::string oxID;
+    std::string genesisBlock;
+    double totalSupply = 7000000000;      // Total supply of coins
+    double burnRate = 0.02;              // Default burn rate (2%)
+    double ownerVault = 1000000000;      // Owner's vault (1 billion coins)
+    double userVault = 6000000000;       // User's vault (6 billion coins)
+    double transactionFee = 0.005;       // 0.5% transaction fee
+    double maintenanceFee = 0.00001;     // 0.001% maintenance fee
+    std::string maintenanceVault = "0xMaintenanceVault"; // Vault address
+    std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
+};
 
 // Genesis block creation
 void createGenesisTransaction(BlockchainConfig& config) {
-    // Initialize the owner vault
     ledger["OwnerVault"] = config.ownerVault;
-int main() {
-    BlockchainConfig config;
+    ledger["UserVault"] = config.userVault;
+    ledger["MaintenanceVault"] = 0.0;
 
-    // Create the genesis transaction
-    createGenesisTransaction(config);
-std::map<std::string, double> offChainLedger; // Tracks off-chain balances
+    std::cout << "[INFO] Genesis transaction created:\n";
+    std::cout << "  Owner Vault: " << config.ownerVault << " coins\n";
+    std::cout << "  User Vault: " << config.userVault << " coins\n";
+    std::cout << "  Maintenance Vault: " << ledger["MaintenanceVault"] << " coins\n";
+}
 
+// Off-chain transfer function
 void transferOffChain(const std::string& user, double amount) {
     if (ledger["UserVault"] >= amount) {
         ledger["UserVault"] -= amount;
@@ -134,178 +138,24 @@ void transferOffChain(const std::string& user, double amount) {
         std::cout << "[ERROR] Insufficient funds in User Vault for off-chain transfer.\n";
     }
 }
-    // Blockchain is now initialized
-    std::cout << "[INFO] Blockchain initialized with genesis transaction.\n";
 
-    return 0;
+int main() {
+    try {
+        std::cout << "Welcome to the EL-40 Blockchain Program.\n";
+
+        BlockchainConfig config;
+
+        // Create the genesis transaction
+        createGenesisTransaction(config);
+
+        std::cout << "[INFO] Blockchain initialized with genesis transaction.\n";
+
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
 }
-    // Initialize the user vault
-    ledger["UserVault"] = config.userVault;
-
-    // Initialize the maintenance vault with 0 balance
-    ledger["MaintenanceVault"] = 0.0;
-
-    // Log genesis transaction
-    std::cout << "[INFO] Genesis transaction created:\n";
-    std::cout << "  Owner Vault: " << config.ownerVault << " coins\n";
-    std::cout << "  User Vault: " << config.userVault << " coins\n";
-    std::cout << "  Maintenance Vault: " << ledger["MaintenanceVault"] << " coins\n";
-}
-// Transaction Structure
-struct Transaction {
-    std::string sender;
-    std::string receiver;
-    double amount;
-    std::string signature;
-
-    std::string toString() const {
-        return sender + receiver + std::to_string(amount) + signature;
-    }
-};
-
-// Transaction Class
-class TransactionClass {
-public:
-    std::string txID;
-    std::string sender;
-    std::string receiver;
-    double amount;
-    std::vector<std::string> inputs;  // References to UTXOs
-    std::map<std::string, double> outputs; // New UTXOs
-    std::string signature;
-    
-    TransactionClass(std::string sender, std::string receiver, double amount) {
-        this->sender = sender;
-        this->receiver = receiver;
-        this->amount = amount;
-        this->txID = generateTxID();  // Unique transaction hash
-    }
-    
-    std::string generateTxID() {
-        return EL40_Hash(sender + receiver + std::to_string(amount));
-    }
-};
-
-// Mempool Class (include here detailed transaction validation and management)
-class Mempool {
-public:
-    std::unordered_map<std::string, TransactionClass> pendingTxs;
-    std::unordered_set<std::string> usedUTXOs; // Track used UTXOs
-    
-    void addTransaction(TransactionClass tx) {
-        if (validateTransaction(tx)) {
-            pendingTxs[tx.txID] = tx;
-        }
-    }
-    
-    bool validateTransaction(TransactionClass tx) {
-        // Check for double-spending using UTXO model
-        for (const std::string& input : tx.inputs) {
-            if (usedUTXOs.find(input) != usedUTXOs.end()) {
-                return false;  // Double spending detected
-            }
-        }
-        // Additional validation logic can be added here
-        return true;
-    }
-    
-    std::vector<TransactionClass> getValidTransactions() {
-        std::vector<TransactionClass> validTxs;
-        for (auto& pair : pendingTxs) {
-            validTxs.push_back(pair.second);
-        }
-        return validTxs;
-    }
-};
-
-// BlockchainDB Class (using LevelDB for storing blockchain data)
-class BlockchainDB {
-public:
-    leveldb::DB* db;
-    leveldb::Options options;
-    
-    BlockchainDB() {
-        options.create_if_missing = true;
-        leveldb::Status status = leveldb::DB::Open(options, "./blockchain_db", &db);
-        if (!status.ok()) {
-            std::cerr << "Unable to open database: " << status.ToString() << std::endl;
-        }
-    }
-
-    void storeBlock(const std::string& blockHash, const std::string& blockData) {
-        db->Put(leveldb::WriteOptions(), blockHash, blockData);
-    }
-    
-    std::string getBlock(const std::string& blockHash) {
-        std::string blockData;
-        db->Get(leveldb::ReadOptions(), blockHash, &blockData);
-        return blockData;
-    }
-};
-void depositCoins(const std::string& userWallet, const std::string& personalWallet, double amount, const std::string& maintenanceVault, double maintenanceFeeRate) {
-    std::lock_guard<std::mutex> lock(chainMutex); // Ensure thread safety
-class EL40_Blockchain {
-private:
-blockchain.depositCoins("UserWalletAddress", "PersonalWalletAddress", 1000.0, "0xMaintenanceVault", 0.00001);
-    // Other members...
-
-public:
-    // Existing methods...
-
-    // Add this function here
-    void depositCoins(const std::string& userWallet, const std::string& personalWallet, double amount, const std::string& maintenanceVault, double maintenanceFeeRate);
-};
-    // Calculate maintenance fee
-    double maintenanceFee = amount * maintenanceFeeRate;
-
-    // Distribute coins
-    ledger[userWallet] += amount - maintenanceFee; // Deposit to user wallet minus maintenance fee
-    ledger[personalWallet] += maintenanceFee;     // Deposit maintenance fee to personal wallet
-    ledger[maintenanceVault] += maintenanceFee;   // Deposit maintenance fee to vault
-
-    // Log the operation
-    std::cout << "[INFO] Deposited " << amount << " coins into user wallet: " << userWallet << "\n";
-    std::cout << "[INFO] Maintenance fee of " << maintenanceFee << " contributed to vault: " << maintenanceVault << "\n";
-}
-// Block Structure
-struct Block {
-    int index;
-    std::string timestamp;
-    std::vector<Transaction> transactions;
-    std::string prevHash;
-    std::string hash;
-    int nonce;
-    std::vector<std::string> fragmentHashes; // Fragment hashes
-
-    Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
-        : index(idx), transactions(txs), prevHash(prev), nonce(0) {
-        timestamp = std::to_string(std::time(nullptr));
-        hash = generateHash();
-    }
-
-    std::string generateHash() const {
-        std::string toHash = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
-        for (const auto& tx : transactions) {
-            toHash += tx.toString();
-        }
-        return EL40_Hash(toHash);
-    }
-
-    void mineBlock(int difficulty) {
-        std::string target(difficulty, '0');
-        while (hash.substr(0, difficulty) != target) {
-            nonce++;
-            hash = generateHash();
-        }
-    }
-
-    void mineFragment(int difficulty) {
-        std::string fragmentData = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
-        std::string fragmentHash = EL40_Hash(fragmentData);
-        fragmentHashes.push_back(fragmentHash);
-        nonce++;
-    }
-};
 
 // Blockchain Class
 class EL40_Blockchain {
