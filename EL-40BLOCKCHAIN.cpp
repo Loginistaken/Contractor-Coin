@@ -23,6 +23,16 @@
 #include "blockchain.h"     // Core blockchain functions
 #include "p2p_network.h"    // Peer-to-peer communication
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
+#include <unordered_set>
+#include <regex>
+#include <thread>
+#include <chrono>
+#include <random>
+#include <sstream>
+
+// Global rate-limiting registry
+std::unordered_map<std::string, int> nodeRequestCount;
+std::mutex ddosMutex;
 
 using namespace asio;
 using ip::tcp;
@@ -166,7 +176,19 @@ void createGenesisTransaction(BlockchainConfig& config) {
     std::cout << "  User Vault: " << config.userVault << " coins\n";
     std::cout << "  Maintenance Vault: " << ledger["MaintenanceVault"] << " coins\n";
 }
+main(std::string generateSecureUsername() {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    std::default_random_engine rng(std::random_device{}());
+    std::uniform_int_distribution<> dist(0, sizeof(charset) - 2);
 
+    std::stringstream username;
+    username << "user_";
+    for (int i = 0; i < 10; ++i) {
+        username << charset[dist(rng)];
+    }
+    return username.str();
+}
+)
 // Add this mutex to ensure thread safety for ledger operations
 std::mutex ledgerMutex;
 
@@ -325,7 +347,19 @@ public:
             std::cout << "\nNonce: " << block.nonce << "\n\n";
         }
     }
+integrateWithMetaverse(void callExternalXML(const std::string& resourceURL) {
+    std::regex xmlCheck(".*\\.xml$");
+    if (std::regex_match(resourceURL, xmlCheck)) {
+        std::cout << "[XML] External call to: " << resourceURL << "\n";
+        callExternalXML("https://external-node.net/data-feed.xml");
 
+        // Placeholder: Simulate fetching and parsing XML
+        std::cout << "[XML] <data><user>Verified</user><token>Auto</token></data>\n";
+    } else {
+        std::cout << "Invalid XML format. Only .xml URLs accepted for external integrations.\n";
+    }
+}
+)
     void fetchExternalTransactions() {
         std::cout << "Fetching external transactions using Python scraper...\n";
         system("python3 scraper.py"); // Calls external Python scraper
@@ -355,6 +389,14 @@ bool nodeAccessAgreement() {
         std::cout << "\nAccess denied. Returning to homepage...\n";
         return false;
     }
+}
+std::lock_guard<std::mutex> lock(ddosMutex);
+std::string clientIP = socket.remote_endpoint().address().to_string();
+
+nodeRequestCount[clientIP]++;
+if (nodeRequestCount[clientIP] > 5) {
+    std::cout << "Potential DDoS detected from " << clientIP << " — throttling node.\n";
+    std::this_thread::sleep_for(std::chrono::seconds(5)); // simple throttle
 }
 
 // Peer-to-Peer Networking
@@ -410,7 +452,23 @@ void displayExitPopup() {
     std::cout << "\nDDoS Protection Enabled: Network safety is ensured during this operation.\n";
 }
 
-int main() {
+int main(void displayLicensePopup() {
+    std::cout << "\n\n=== MIT LICENSE AGREEMENT ===\n";
+    std::cout << "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+              << "of this software and associated documentation files (the \"Software\"), to deal\n"
+              << "in the Software without restriction...\n";
+    std::cout << "Type 'agree' to proceed: ";
+
+    std::string input;
+    std::cin >> input;
+    if (input == "agree") {
+        std::cout << "License accepted. Initializing blockchain...\n";
+    } else {
+        std::cout << "License not accepted. Program will terminate.\n";
+        exit(0);
+    }
+}
+) {
     try {
         std::cout << "Welcome to the EL-40 Blockchain Program.\n";
 
