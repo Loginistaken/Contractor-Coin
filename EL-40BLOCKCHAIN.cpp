@@ -125,8 +125,12 @@ void createGenesisTransaction(BlockchainConfig& config) {
     std::cout << "  Maintenance Vault: " << ledger["MaintenanceVault"] << " coins\n";
 }
 
-// Off-chain transfer function
+// Add this mutex to ensure thread safety for ledger operations
+std::mutex ledgerMutex;
+
+// Updated `transferOffChain` function with thread safety
 void transferOffChain(const std::string& user, double amount) {
+    std::lock_guard<std::mutex> lock(ledgerMutex);  // Lock for thread safety
     if (ledger["UserVault"] >= amount) {
         ledger["UserVault"] -= amount;
         offChainLedger[user] += amount;
@@ -139,8 +143,64 @@ void transferOffChain(const std::string& user, double amount) {
     }
 }
 
-int main() {
+// Updated `verifyTransaction` with proper exception handling
+bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
+    CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);
+    bool result = false;
+
     try {
+        CryptoPP::StringSource ss(signature + data, true,
+            new CryptoPP::SignatureVerificationFilter(
+                verifier,
+                new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
+                CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
+            )
+        );
+    } catch (const CryptoPP::Exception& e) {
+        std::cerr << "Error verifying transaction: " << e.what() << '\n';
+        return false;
+    }
+    return result;
+}
+
+// Replace hardcoded block reward with configurable value
+double blockReward = 25.0;  // Add this to the configuration section
+
+// Update `addBlock` function to use the configurable block reward
+Transaction rewardTx = {"Network", minerAddress, blockReward, "Reward"};  // Replace hardcoded 25.0 with blockReward
+
+// Replace `system` call in `fetchExternalTransactions` with a safer alternative
+void fetchExternalTransactions() {
+    std::ifstream scraperOutput("scraper_output.txt");  // Assume output is saved by scraper
+    if (!scraperOutput.is_open()) {
+        std::cerr << "[ERROR] Failed to open scraper output file.\n";
+        return;
+    }
+
+    std::string line;
+    while (std::getline(scraperOutput, line)) {
+        std::cout << "[INFO] External transaction: " << line << "\n";
+    }
+    scraperOutput.close();
+}
+
+// Add exception handling in the `startServer` function
+void startServer(unsigned short port) {
+    try {
+        asio::io_context io_context;
+        asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+        std::cout << "Server started on port " << port << "\n";
+
+        for (;;) {
+            asio::ip::tcp::socket socket(io_context);
+            acceptor.accept(socket);
+            std::cout << "New node connected!\n";
+            std::thread(handleClient, std::move(socket)).detach();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR] Server Error: " << e.what() << "\n";
+    }
+}
         std::cout << "Welcome to the EL-40 Blockchain Program.\n";
 
         BlockchainConfig config;
