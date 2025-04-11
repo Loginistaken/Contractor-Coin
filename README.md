@@ -115,7 +115,30 @@ std::map<std::string, double> ledger;
 void createGenesisTransaction(BlockchainConfig& config) {
     // Initialize the owner vault
     ledger["OwnerVault"] = config.ownerVault;
+int main() {
+    BlockchainConfig config;
 
+    // Create the genesis transaction
+    createGenesisTransaction(config);
+std::map<std::string, double> offChainLedger; // Tracks off-chain balances
+
+void transferOffChain(const std::string& user, double amount) {
+    if (ledger["UserVault"] >= amount) {
+        ledger["UserVault"] -= amount;
+        offChainLedger[user] += amount;
+
+        std::cout << "[INFO] Transferred " << amount << " coins off-chain for user: " << user << "\n";
+        std::cout << "  On-Chain Balance: " << ledger["UserVault"] << "\n";
+        std::cout << "  Off-Chain Balance: " << offChainLedger[user] << "\n";
+    } else {
+        std::cout << "[ERROR] Insufficient funds in User Vault for off-chain transfer.\n";
+    }
+}
+    // Blockchain is now initialized
+    std::cout << "[INFO] Blockchain initialized with genesis transaction.\n";
+
+    return 0;
+}
     // Initialize the user vault
     ledger["UserVault"] = config.userVault;
 
