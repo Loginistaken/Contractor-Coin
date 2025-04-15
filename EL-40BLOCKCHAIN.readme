@@ -164,6 +164,74 @@ struct BlockchainConfig {
     std::string maintenanceVault = "0xMaintenanceVault"; // Vault address
     std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
 };
+// === ContractorCoin_Core.h ===
+#pragma once
+#include <string>
+#include <iostream>
+#include <chrono>
+#include <ctime>
+#include <mutex>
+#include "crypto.h"
+#include "blockchain.h" // assumes BlockchainConfig + ledger defined
+
+struct Transaction {
+    std::string sender, receiver, signature, timestamp, txHash;
+    double amount;
+
+    Transaction(const std::string& from, const std::string& to, double amt, const std::string& sig)
+        : sender(from), receiver(to), amount(amt), signature(sig)
+    {
+        auto now = std::chrono::system_clock::now();
+        std::time_t time = std::chrono::system_clock::to_time_t(now);
+        timestamp = std::ctime(&time);
+        txHash = EL40_Hash(sender + receiver + std::to_string(amount) + timestamp);
+    }
+};
+
+inline bool processTransaction(const Transaction& tx, BlockchainConfig& cfg) {
+    std::lock_guard<std::mutex> lock(ledgerMutex);
+    double fee = tx.amount * cfg.transactionFee;
+    double burn = tx.amount * cfg.burnRate;
+    double maintenance = tx.amount * cfg.maintenanceFee;
+    double total = tx.amount + fee + burn + maintenance;
+
+    if (ledger[tx.sender] < total) {
+        std::cerr << "[TX ERROR] Insufficient funds.\n"; return false;
+    }
+
+    ledger[tx.sender]     -= total;
+    ledger[tx.receiver]   += tx.amount;
+    ledger[cfg.maintenanceVault] += maintenance;
+    cfg.totalSupply       -= burn;
+
+    std::cout << "[TX] " << tx.amount << " sent " << tx.sender << " → " << tx.receiver << "\n";
+    std::cout << "     Fee: " << fee << " | Burn: " << burn << " | Maintenance: " << maintenance << "\n";
+    return true;
+}
+
+inline bool mintCoin(const std::string& to, double amt, BlockchainConfig& cfg) {
+    std::lock_guard<std::mutex> lock(ledgerMutex);
+    if (ledger["OwnerVault"] < amt) {
+        std::cerr << "[MINT ERROR] OwnerVault balance too low.\n"; return false;
+    }
+
+    ledger["OwnerVault"] -= amt;
+    ledger[to]           += amt;
+
+    std::cout << "[MINT] " << amt << " minted to " << to << "\n";
+    return true;
+}
+
+inline void rewardMiner(const std::string& miner, double reward, BlockchainConfig& cfg) {
+    std::lock_guard<std::mutex> lock(ledgerMutex);
+    if (ledger["OwnerVault"] >= reward) {
+        ledger["OwnerVault"] -= reward;
+        ledger[miner]        += reward;
+        std::cout << "[REWARD] " << reward << " to miner: " << miner << "\n";
+    } else {
+        std::cerr << "[REWARD ERROR] Not enough funds in OwnerVault.\n";
+    }
+}
 
 // Genesis block creation
 void createGenesisTransaction(BlockchainConfig& config) {
