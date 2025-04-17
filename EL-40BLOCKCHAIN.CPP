@@ -25,6 +25,7 @@
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
 #include <unordered_set>
 #include <regex>
+#include "external/crow/include/crow_all.h"
 #include <thread>
 #include <chrono>
 #include <random>
@@ -571,7 +572,116 @@ void runNode(EL40_Blockchain& blockchain, const std::string& blockData) {
     std::vector<Transaction> transactions = { Transaction{"Node1", "Node2", 50.0, ""} };
     blockchain.addBlock(transactions);
 }
+#include "crow_all.h" // Crow framework for lightweight HTTP server
+#include <iostream>
+#include <thread>
+#!/bin/bash
+# Script to download and set up Crow framework
 
+echo "Downloading Crow framework..."
+git clone https://github.com/CrowCpp/Crow.git external/crow
+cd external/crow
+git checkout v1.0  # Replace with a stable version or the latest tag
+cd ../..
+
+echo "Crow framework setup completed."
+git submodule add https://github.com/CrowCpp/Crow.git external/crow
+git submodule update --init --recursive
+// Function to start the HTTP server for Buy Contractor Coin
+void startWebsite() {
+    crow::SimpleApp app; // Create a Crow application instance
+g++ -std=c++17 -Iexternal/crow/include -o ContractorCoin EL-40BLOCKCHAIN.CPP
+  
+// Define the homepage route
+    CROW_ROUTE(app, "/")([]() {
+        return "<html>"
+               "<head><title>Buy Contractor Coin</title></head>"
+               "<body>"
+               "<h1>Welcome to Buy Contractor Coin</h1>"
+               "<p>Thank you for your interest in Contractor Coin! You can purchase coins by following the instructions below:</p>"
+               "<ul>"
+               "  <li>Step 1: Visit our exchanges.</li>"
+               "  <li>Step 2: Use your wallet to buy coins.</li>"
+               "  <li>Step 3: Enjoy trading and using Contractor Coin!</li>"
+               "</ul>"
+               "<footer>© 2025 Contractor Coin</footer>"
+               "</body>"
+               "</html>";
+    });
+
+    // Define a route for additional resources (e.g., FAQs)
+    CROW_ROUTE(app, "/faq")([]() {
+        return "<html>"
+               "<head><title>Contractor Coin FAQ</title></head>"
+               "<body>"
+               "<h1>Frequently Asked Questions</h1>"
+               "<p>Here are some common questions about Contractor Coin:</p>"
+               "<ul>"
+               "  <li><strong>What is Contractor Coin?</strong> A decentralized cryptocurrency designed for efficient transactions.</li>"
+               "  <li><strong>How do I buy Contractor Coin?</strong> Visit the homepage for instructions.</li>"
+               "</ul>"
+               "<footer>© 2025 Contractor Coin</footer>"
+               "</body>"
+               "</html>";
+    });
+
+    // Start the server on port 8080
+    std::cout << "Starting the 'Buy Contractor Coin' website on http://localhost:8080 ..." << std::endl;
+    app.port(8080).multithreaded().run();
+}
+
+int main() {
+    try {
+        std::cout << "Welcome to the EL-40 Blockchain Program.\n";
+const std::string advertisementUrl = "https://www.your-website.com";
+
+// Example: Adding the link in a transaction
+struct Transaction {
+    std::string fromAddress;
+    std::string toAddress;
+    double amount;
+    std::string advertisement = advertisementUrl; // Embed the link
+};
+        // Initialize the blockchain
+        BlockchainConfig config;
+        createGenesisTransaction(config);
+
+        std::cout << "[INFO] Blockchain initialized with genesis transaction.\n";
+
+        // Start the advertisement website in a separate thread
+        std::thread websiteThread(startWebsite);
+        websiteThread.detach();
+
+        // Simulate multiple nodes mining and communicating
+        EL40_Blockchain blockchain;
+        std::thread node1(runNode, std::ref(blockchain), "Node 1 Block Data");
+        std::thread node2(runNode, std::ref(blockchain), "Node 2 Block Data");
+
+        node1.join();
+        node2.join();
+
+        blockchain.displayChain();
+
+        // Fetch external transactions
+        blockchain.fetchExternalTransactions();
+
+        // Start P2P server in a separate thread
+        std::thread serverThread(startServer, 8080);
+        serverThread.detach();
+
+        // Simulate program work for demonstration
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        // Call the exit popup before exiting
+        displayExitPopup();
+
+        std::cout << "Exiting program...\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
+
+    return 0;
+}
 // Display exit popup with MIT License
 void displayExitPopup() {
     std::cout << "\n\n--- Exit Acknowledgment ---\n";
