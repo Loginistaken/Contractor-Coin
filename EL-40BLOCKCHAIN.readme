@@ -29,7 +29,74 @@
 #include <chrono>
 #include <random>
 #include <sstream>
+#include <iostream>
+#include <crypto++/sha3.h>  // Requires Crypto++ library
+#include <asio.hpp>         // Requires ASIO library
+#include <leveldb/db.h>     // Requires LevelDB library
 
+// Include the necessary headers for cryptographic, blockchain, and P2P logic
+#include "crypto.h"       // Ensure this file defines cryptographic functions
+#include "blockchain.h"   // Ensure this file contains blockchain structures and core logic
+#include "p2p_network.h"  // Ensure this file implements P2P networking functionality
+
+void testCryptoFunctionality() {
+    // Example: Using Crypto++ to compute a SHA-3 hash
+    std::string input = "Test data";
+    CryptoPP::SHA3_256 hash;
+    byte digest[CryptoPP::SHA3_256::DIGESTSIZE];
+
+    hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
+
+    std::cout << "SHA-3 hash computed successfully.\n";
+}
+
+void testLevelDBFunctionality() {
+    // Example: Using LevelDB for basic database operations
+    leveldb::DB* db;
+    leveldb::Options options;
+    options.create_if_missing = true;
+
+    leveldb::Status status = leveldb::DB::Open(options, "testdb", &db);
+    if (status.ok()) {
+        db->Put(leveldb::WriteOptions(), "key", "value");
+        std::string value;
+        db->Get(leveldb::ReadOptions(), "key", &value);
+        std::cout << "LevelDB stored and retrieved: " << value << "\n";
+        delete db;
+    } else {
+        std::cerr << "LevelDB error: " << status.ToString() << "\n";
+    }
+}
+
+void testASIOFunctionality() {
+    // Example: Setting up a basic ASIO service
+    try {
+        asio::io_context io_context;
+
+        asio::steady_timer timer(io_context, asio::chrono::seconds(1));
+        timer.wait();
+
+        std::cout << "ASIO timer completed successfully.\n";
+    } catch (const std::exception& e) {
+        std::cerr << "ASIO error: " << e.what() << "\n";
+    }
+}
+
+int main() {
+    std::cout << "Starting tests for external libraries...\n";
+
+    // Test Crypto++ functionality
+    testCryptoFunctionality();
+
+    // Test LevelDB functionality
+    testLevelDBFunctionality();
+
+    // Test ASIO functionality
+    testASIOFunctionality();
+
+    std::cout << "All tests completed successfully.\n";
+    return 0;
+}
 // Global rate-limiting registry
 std::unordered_map<std::string, int> nodeRequestCount;
 std::mutex ddosMutex;
