@@ -402,7 +402,6 @@ void startServer(unsigned short port) {
         return 1;
     }
 }
-
 // Blockchain Class
 class EL40_Blockchain {
 private:
@@ -469,22 +468,24 @@ public:
             std::cout << "\nNonce: " << block.nonce << "\n\n";
         }
     }
-integrateWithMetaverse(void callExternalXML(const std::string& resourceURL) {
-    std::regex xmlCheck(".*\\.xml$");
-    if (std::regex_match(resourceURL, xmlCheck)) {
-        std::cout << "[XML] External call to: " << resourceURL << "\n";
-        callExternalXML("https://external-node.net/data-feed.xml");
 
-        // Placeholder: Simulate fetching and parsing XML
-        std::cout << "[XML] <data><user>Verified</user><token>Auto</token></data>\n";
-    } else {
-        std::cout << "Invalid XML format. Only .xml URLs accepted for external integrations.\n";
+    void integrateWithMetaverse(const std::string& resourceURL) {
+        std::regex xmlCheck(".*\\.xml$");
+        if (std::regex_match(resourceURL, xmlCheck)) {
+            std::cout << "[XML] External call to: " << resourceURL << "\n";
+
+            // Placeholder: Simulate fetching and parsing XML
+            std::cout << "[XML] <data><user>Verified</user><token>Auto</token></data>\n";
+        } else {
+            std::cout << "Invalid XML format. Only .xml URLs accepted for external integrations.\n";
+        }
     }
-}
-)
+
     void fetchExternalTransactions() {
         std::cout << "Fetching external transactions using Python scraper...\n";
-        system("python3 scraper.py"); // Calls external Python scraper
+        if (std::system("python3 scraper.py") != 0) { // Calls external Python scraper
+            std::cerr << "[ERROR] Failed to execute scraper.\n";
+        }
     }
 
 private:
@@ -512,14 +513,6 @@ bool nodeAccessAgreement() {
         return false;
     }
 }
-std::lock_guard<std::mutex> lock(ddosMutex);
-std::string clientIP = socket.remote_endpoint().address().to_string();
-
-nodeRequestCount[clientIP]++;
-if (nodeRequestCount[clientIP] > 5) {
-    std::cout << "Potential DDoS detected from " << clientIP << " — throttling node.\n";
-    std::this_thread::sleep_for(std::chrono::seconds(5)); // simple throttle
-}
 
 // Peer-to-Peer Networking
 void startServer(unsigned short port) {
@@ -531,6 +524,18 @@ void startServer(unsigned short port) {
         for (;;) {
             asio::ip::tcp::socket socket(io_context);
             acceptor.accept(socket);
+
+            std::string clientIP = socket.remote_endpoint().address().to_string();
+
+            {
+                std::lock_guard<std::mutex> lock(ddosMutex);
+                nodeRequestCount[clientIP]++;
+                if (nodeRequestCount[clientIP] > 5) {
+                    std::cout << "Potential DDoS detected from " << clientIP << " — throttling node.\n";
+                    std::this_thread::sleep_for(std::chrono::seconds(5)); // Simple throttle
+                }
+            }
+
             std::cout << "New node connected!\n";
             std::thread(handleClient, std::move(socket)).detach();
         }
@@ -552,82 +557,116 @@ void handleClient(asio::ip::tcp::socket socket) {
         std::cerr << "Client Error: " << e.what() << "\n";
     }
 }
-
-// Simulate node network with multithreading (each thread represents a node)
-void runNode(EL40_Blockchain& blockchain, const std::string& blockData) {
-    std::vector<Transaction> transactions = { Transaction{"Node1", "Node2", 50.0, ""} };
-    blockchain.addBlock(transactions);
-}
-#include "crow_all.h" // Crow framework for lightweight HTTP server
+#include "crow_all.h" // Include Crow library
 #include <iostream>
 #include <thread>
-#!/bin/bash
-# Script to download and set up Crow framework
+#include <chrono>
+#include <string>
+#include <cstdlib>
+#include <mutex>
+#include "blockchain.h" // Include blockchain logic
+#include "crypto.h"     // Include cryptographic utilities
 
-echo "Downloading Crow framework..."
-git clone https://github.com/CrowCpp/Crow.git external/crow
-cd external/crow
-git checkout v1.0  # Replace with a stable version or the latest tag
-cd ../..
+// Crow Application Instance
+crow::SimpleApp app; // Create a Crow application instance
 
-echo "Crow framework setup completed."
-git submodule add https://github.com/CrowCpp/Crow.git external/crow
-git submodule update --init --recursive
-// Function to start the HTTP server for Buy Contractor Coin
-void startWebsite() {
-    crow::SimpleApp app; // Create a Crow application instance
-g++ -std=c++17 -Iexternal/crow/include -o ContractorCoin EL-40BLOCKCHAIN.CPP
-  
 // Define the homepage route
-    CROW_ROUTE(app, "/")([]() {
-        return "<html>"
-               "<head><title>Buy Contractor Coin</title></head>"
-               "<body>"
-               "<h1>Welcome to Buy Contractor Coin</h1>"
-               "<p>Thank you for your interest in Contractor Coin! You can purchase coins by following the instructions below:</p>"
-               "<ul>"
-               "  <li>Step 1: Visit our exchanges.</li>"
-               "  <li>Step 2: Use your wallet to buy coins.</li>"
-               "  <li>Step 3: Enjoy trading and using Contractor Coin!</li>"
-               "</ul>"
-               "<footer>© 2025 Contractor Coin</footer>"
-               "</body>"
-               "</html>";
-    });
+CROW_ROUTE(app, "/")([]() {
+    return "<html>"
+           "<head><title>Buy Contractor Coin</title></head>"
+           "<body>"
+           "<h1>Welcome to Buy Contractor Coin</h1>"
+           "<p>Thank you for your interest in Contractor Coin! You can purchase coins by following the instructions below:</p>"
+           "<ul>"
+           "  <li>Step 1: Visit our exchanges.</li>"
+           "  <li>Step 2: Use your wallet to buy coins.</li>"
+           "  <li>Step 3: Enjoy trading and using Contractor Coin!</li>"
+           "</ul>"
+           "<footer>© 2025 Contractor Coin</footer>"
+           "</body>"
+           "</html>";
+});
 
-    // Define a route for additional resources (e.g., FAQs)
-    CROW_ROUTE(app, "/faq")([]() {
-        return "<html>"
-               "<head><title>Contractor Coin FAQ</title></head>"
-               "<body>"
-               "<h1>Frequently Asked Questions</h1>"
-               "<p>Here are some common questions about Contractor Coin:</p>"
-               "<ul>"
-               "  <li><strong>What is Contractor Coin?</strong> A decentralized cryptocurrency designed for efficient transactions.</li>"
-               "  <li><strong>How do I buy Contractor Coin?</strong> Visit the homepage for instructions.</li>"
-               "</ul>"
-               "<footer>© 2025 Contractor Coin</footer>"
-               "</body>"
-               "</html>";
-    });
+// Define a route for additional resources (e.g., FAQs)
+CROW_ROUTE(app, "/faq")([]() {
+    return "<html>"
+           "<head><title>Contractor Coin FAQ</title></head>"
+           "<body>"
+           "<h1>Frequently Asked Questions</h1>"
+           "<p>Here are some common questions about Contractor Coin:</p>"
+           "<ul>"
+           "  <li><strong>What is Contractor Coin?</strong> A decentralized cryptocurrency designed for efficient transactions.</li>"
+           "  <li><strong>How do I buy Contractor Coin?</strong> Visit the homepage for instructions.</li>"
+           "</ul>"
+           "<footer>© 2025 Contractor Coin</footer>"
+           "</body>"
+           "</html>";
+});
 
-    // Start the server on port 8080
-    std::cout << "Starting the 'Buy Contractor Coin' website on http://localhost:8080 ..." << std::endl;
-    app.port(8080).multithreaded().run();
+// Function to start the Crow-based website
+void startWebsite() {
+    try {
+        std::cout << "Starting the 'Buy Contractor Coin' website on http://localhost:8080 ..." << std::endl;
+        app.port(8080).multithreaded().run();
+    } catch (const std::exception& e) {
+        std::cerr << "Error starting website: " << e.what() << "\n";
+    }
 }
 
+// Display exit popup with MIT License
+void displayExitPopup() {
+    std::cout << "\n\n--- Exit Acknowledgment ---\n";
+    std::cout << "MIT License\n";
+    std::cout << "Copyright (c) 2025 EL-40 Blockchain\n";
+    std::cout << "Special thanks to GPT Chat for assistance in the development.\n";
+    std::cout << "This software is provided 'as-is' without any express or implied warranty.\n";
+    std::cout << "For more information, visit: https://opensource.org/licenses/MIT\n";
+    std::cout << "Email: elindau85@gmail.com\n";
+    std::cout << "By: EL (El-40 Blockchain)\n";
+    std::cout << "--- End of License ---\n";
+
+    std::cout << "\nDDoS Protection Enabled: Network safety is ensured during this operation.\n";
+}
+
+// Node Access Agreement Function
+bool nodeAccessAgreement() {
+    std::string response;
+    std::cout << "\nEL-40 Blockchain: Do you accept the node connection agreement? (yes/no): ";
+    std::cin >> response;
+
+    if (response == "yes" || response == "Yes") {
+        std::cout << "\nAccess granted. Connecting node...\n";
+        std::cout << "\nThis connection allows nodes to sync transactions and view blockchain data securely.\n";
+        return true;
+    } else {
+        std::cout << "\nAccess denied. Returning to homepage...\n";
+        return false;
+    }
+}
+
+// Main Function
 int main() {
     try {
         std::cout << "Welcome to the EL-40 Blockchain Program.\n";
-const std::string advertisementUrl = "https://www.your-website.com";
 
-// Example: Adding the link in a transaction
-struct Transaction {
-    std::string fromAddress;
-    std::string toAddress;
-    double amount;
-    std::string advertisement = advertisementUrl; // Embed the link
-};
+        // License agreement popup
+        std::cout << "\n\n=== MIT LICENSE AGREEMENT ===\n";
+        std::cout << "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+                  << "of this software and associated documentation files (the \"Software\"), to deal\n"
+                  << "in the Software without restriction...\n";
+        std::cout << "Type 'agree' to proceed: ";
+
+        std::string input;
+        std::cin >> input;
+        if (input != "agree") {
+            std::cout << "License not accepted. Program will terminate.\n";
+            exit(0);
+        }
+
+        if (!nodeAccessAgreement()) {
+            return 0;
+        }
+
         // Initialize the blockchain
         BlockchainConfig config;
         createGenesisTransaction(config);
@@ -656,76 +695,6 @@ struct Transaction {
         serverThread.detach();
 
         // Simulate program work for demonstration
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-
-        // Call the exit popup before exiting
-        displayExitPopup();
-
-        std::cout << "Exiting program...\n";
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
-    }
-
-    return 0;
-}
-// Display exit popup with MIT License
-void displayExitPopup() {
-    std::cout << "\n\n--- Exit Acknowledgment ---\n";
-    std::cout << "MIT License\n";
-    std::cout << "Copyright (c) 2025 EL-40 Blockchain\n";
-    std::cout << "Special thanks to GPT Chat for assistance in the development.\n";
-    std::cout << "This software is provided 'as-is' without any express or implied warranty.\n";
-    std::cout << "For more information, visit: https://opensource.org/licenses/MIT\n";
-    std::cout << "Email: elindau85@gmail.com\n";
-    std::cout << "By: EL (El-40 Blockchain)\n";
-    std::cout << "--- End of License ---\n";
-
-    std::cout << "\nDDoS Protection Enabled: Network safety is ensured during this operation.\n";
-}
-
-int main(void displayLicensePopup() {
-    std::cout << "\n\n=== MIT LICENSE AGREEMENT ===\n";
-    std::cout << "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-              << "of this software and associated documentation files (the \"Software\"), to deal\n"
-              << "in the Software without restriction...\n";
-    std::cout << "Type 'agree' to proceed: ";
-
-    std::string input;
-    std::cin >> input;
-    if (input == "agree") {
-        std::cout << "License accepted. Initializing blockchain...\n";
-    } else {
-        std::cout << "License not accepted. Program will terminate.\n";
-        exit(0);
-    }
-}
-) {
-    try {
-        std::cout << "Welcome to the EL-40 Blockchain Program.\n";
-
-        if (!nodeAccessAgreement()) {
-            return 0;
-        }
-
-        EL40_Blockchain blockchain;
-
-        // Simulate multiple nodes mining and communicating
-        std::thread node1(runNode, std::ref(blockchain), "Node 1 Block Data");
-        std::thread node2(runNode, std::ref(blockchain), "Node 2 Block Data");
-
-        node1.join();
-        node2.join();
-
-        blockchain.displayChain();
-
-        // Fetch external transactions
-        blockchain.fetchExternalTransactions();
-
-        // Start P2P server in a separate thread
-        std::thread serverThread(startServer, 8080);
-        serverThread.detach();
-
-        // Simulate program work for demonstration (replace with your actual logic)
         std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Call the exit popup before exiting
