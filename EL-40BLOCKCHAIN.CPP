@@ -23,17 +23,8 @@
 #include "blockchain.h"     // Core blockchain functions
 #include "p2p_network.h"    // Peer-to-peer communication
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
-#include <unordered_set>
 #include <regex>
 #include "external/crow/include/crow_all.h"
-#include <thread>
-#include <chrono>
-#include <random>
-#include <sstream>
-#include <iostream>
-#include <crypto++/sha3.h>  // Requires Crypto++ library
-#include <asio.hpp>         // Requires ASIO library
-#include <leveldb/db.h>     // Requires LevelDB library
 
 // Include the necessary headers for cryptographic, blockchain, and P2P logic
 #include "crypto.h"       // Ensure this file defines cryptographic functions
@@ -98,6 +89,7 @@ int main() {
     std::cout << "All tests completed successfully.\n";
     return 0;
 }
+
 // Global rate-limiting registry
 std::unordered_map<std::string, int> nodeRequestCount;
 std::mutex ddosMutex;
@@ -106,8 +98,6 @@ using namespace asio;
 using ip::tcp;
 using namespace std;
 
-// Custom Hash Function (SHA-3)
-// Custom Hash Function (SHA-3)
 /**
  * @brief Computes a SHA-3 (256-bit) hash for a given input string.
  * 
@@ -124,7 +114,7 @@ std::string EL40_Hash(const std::string& input) {
     byte digest[SHA3_256::DIGESTSIZE];
     hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
 
-   // HexEncoder to convert the digest into a human-readable hexadecimal format
+    // HexEncoder to convert the digest into a human-readable hexadecimal format
     HexEncoder encoder;
     std::string output;
     encoder.Attach(new StringSink(output));  // Attach output string to the encoder
@@ -132,12 +122,10 @@ std::string EL40_Hash(const std::string& input) {
     encoder.MessageEnd();                    // Signal the end of encoding
 
     return output;  // Return the hex-encoded hash
-
-    return output;  // Return the hex-encoded hash
 }
 
-// Digital Signature Utility
- @brief Signs a given data string using RSA private key.
+/**
+ * @brief Signs a given data string using RSA private key.
  * 
  * This function uses the RSA-PKCS1 v1.5 signing scheme (SHA-256 hashing)
  * to generate a digital signature for the provided data string.
@@ -183,9 +171,7 @@ bool verifyTransaction(const std::string& data, const std::string& signature, co
         CryptoPP::StringSource ss(signature + data, true,
             new CryptoPP::SignatureVerificationFilter(
                 verifier,
-                // Store the verification result in the 'result' variable
                 new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
-                // Options: Throw exceptions and store the result
                 CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
             )
         );
