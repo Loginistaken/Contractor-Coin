@@ -218,6 +218,78 @@ struct BlockchainConfig {
     std::string maintenanceVault = "0xMaintenanceVault"; // Vault address
     std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
 };
+#include <iostream>
+#include <cmath>
+
+class ContractorCoin {
+private:
+    double value;          // Coin value
+    uint64_t sales;        // Number of sales
+    uint64_t totalSupply;  // Total coin supply
+
+public:
+    ContractorCoin() : value(0.000000000000000001), sales(0), totalSupply(0) {}
+
+    void sellCoin(uint64_t numCoins) {
+        sales += numCoins;
+
+        // Phase 1: Rapid increase for first 16 sales (starting with 18 decimals)
+        if (sales <= 16) {
+            value *= pow(10, sales); // Rapid increase for initial transactions
+        }
+        // Phase 2: Gradual increase until value reaches $0.001
+        else if (sales <= 100000) {
+            if (value < 0.001) {
+                value += 0.000000000000000001; // Gradual increase
+            }
+        }
+        // Phase 3: Accelerate the value growth until $1 by 1 million sales
+        else if (sales <= 1000000) {
+            if (value < 1.0) {
+                value += (value * 0.01); // Accelerates until $1
+            }
+        }
+        // Phase 4: Rapid acceleration to $700 between 1 million and 1.1 million sales
+        else if (sales <= 1100000) {
+            if (value < 700.0) {
+                value += (value * 0.5); // Rapid acceleration to $700
+            }
+        }
+        // Phase 5: Slower growth after $700
+        else if (sales <= 1200000) {
+            value += 1.0; // Slower increase after peaking
+        }
+
+        // Minting mechanism: Mint 0.5 billion coins after 1 billion sales
+        if (sales >= 1000000000) {
+            mintCoins(500000000); // Mint 0.5 billion coins
+            sales = 0;            // Reset sales counter for the next cycle
+        }
+    }
+
+    void mintCoins(uint64_t numCoins) {
+        totalSupply += numCoins;
+        std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
+    }
+
+    void displayStatus() {
+        std::cout << "Value: $" << value << ", Sales: " << sales << ", Total Supply: " << totalSupply << std::endl;
+    }
+};
+
+int main() {
+    ContractorCoin coin;
+
+    // Simulate sales
+    for (int i = 1; i <= 1500000; ++i) {
+        coin.sellCoin(1);
+        if (i % 10000 == 0) { // Display status every 10,000 sales
+            coin.displayStatus();
+        }
+    }
+
+    return 0;
+}
 // === ContractorCoin_Core.h ===
 #pragma once
 #include <string>
