@@ -25,20 +25,10 @@
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
 #include "external/crow/include/crow_all.h" // Crow web framework
 #include <regex>
-#include "external/crow/include/crow_all.h"
+
 // === Custom Hash Function (SHA-3) ===
 std::string EL40_Hash(const std::string& input) {
-    CryptoPP::SHA3_256 hash;
-    byte digest[CryptoPP::SHA3_256::DIGESTSIZE];
-    hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
-
-    CryptoPP::HexEncoder encoder;
-    std::string output;
-    encoder.Attach(new CryptoPP::StringSink(output));
-    encoder.Put(digest, sizeof(digest));
-    encoder.MessageEnd();
-    return output;
-}
+  
 
 // === Transaction Structure ===
 struct Transaction {
@@ -129,13 +119,43 @@ void installLevelDB() {
     std::cout << "[INFO] Checking for LevelDB installation...\n";
     if (!isPackageInstalled("libleveldb-dev")) {
         std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
-        if (executeCommand("sudo apt update && sudo apt install -y libleveldb-dev")) {
-            std::cout << "[SUCCESS] LevelDB installed successfully.\n";
-        } else {
+        std::string checkCommand = "dpkg -s " + packageName + " > /dev/null 2>&1";
+std::system("python3 scraper.py");
             std::cerr << "[ERROR] Failed to install LevelDB. Please check your package manager.\n";
         }
     } else {
-        std::cout << "[INFO] LevelDB is already installed.\n";
+     // Utility function to execute shell commands and check for success
+bool executeCommand(const std::string &command) {
+    int result = std::system(command.c_str());
+    if (result != 0) {
+        std::cerr << "[ERROR] Command failed: " << command 
+                  << " (Error Code: " << result << ")\n";
+    }
+    return result == 0;
+}
+
+// Function to check if a package is installed
+bool isPackageInstalled(const std::string &packageName) {
+    std::string checkCommand = "dpkg -s " + packageName + " > /dev/null 2>&1";
+    if (!executeCommand(checkCommand)) {
+        std::cout << "[INFO] Package " << packageName << " is not installed.\n";
+        return false;
+    }
+    std::cout << "[INFO] Package " << packageName << " is already installed.\n";
+    return true;
+}
+
+// Function to install LevelDB
+void installLevelDB() {
+    std::cout << "[INFO] Checking for LevelDB installation...\n";
+    if (!isPackageInstalled("libleveldb-dev")) {
+        std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
+        std::string installCommand = "sudo apt update && sudo apt install -y libleveldb-dev";
+        if (executeCommand(installCommand)) {
+            std::cout << "[SUCCESS] LevelDB installed successfully.\n";
+        } else {
+            std::cerr << "[ERROR] Failed to install LevelDB. Please check your package manager logs.\n";
+        }
     }
 }
 
@@ -144,22 +164,14 @@ void installAsio() {
     std::cout << "[INFO] Checking for Asio installation...\n";
     if (!isPackageInstalled("libasio-dev")) {
         std::cout << "[INFO] Asio not found. Installing Asio...\n";
-        if (executeCommand("sudo apt update && sudo apt install -y libasio-dev")) {
+        std::string installCommand = "sudo apt update && sudo apt install -y libasio-dev";
+        if (executeCommand(installCommand)) {
             std::cout << "[SUCCESS] Asio installed successfully.\n";
         } else {
-            std::cerr << "[ERROR] Failed to install Asio. Please check your package manager.\n";
+            std::cerr << "[ERROR] Failed to install Asio. Please check your package manager logs.\n";
         }
-    } else {
-        std::cout << "[INFO] Asio is already installed.\n";
     }
 }
-
-// Main function to handle installation
-int main() {
-    std::cout << "=== Installation Script for LevelDB and Asio ===\n";
-
-    // Install LevelDB
-    installLevelDB();
 
     // Add a delay for better user experience
     std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -292,10 +304,36 @@ std::string signTransaction(const std::string& data, const CryptoPP::RSA::Privat
  * @param publicKey The RSA public key used for verification.
  * @return True if the signature is valid, otherwise false.
  */
+// Function to verify the authenticity of a digital signature
 bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
     CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);  // RSA Verifier object
     bool result = false;
 
+    try {
+        // Verify the signature by appending it to the data and passing it to the verifier
+        CryptoPP::StringSource ss(signature + data, true,
+            new CryptoPP::SignatureVerificationFilter(
+                verifier,
+                new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
+                CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
+            )
+bool approveBlockAI(const std::string& blockData) {
+    // Future AI logic for approving/rejecting blocks
+    std::cout << "ML Model analyzing block: " << blockData << "... Approved!\n";
+    return true;
+}
+        );
+    } catch (const CryptoPP::Exception& e) {
+        // Enhanced exception message for better debugging
+        std::cerr << "[ERROR] Signature verification failed.\n"
+                  << "        Exception: " << e.what() << "\n"
+                  << "        Data: " << data << "\n"
+                  << "        Signature: " << signature << "\n";
+        return false;  // Signature verification failed
+    }
+
+    return result;  // Return whether the signature was valid
+}
     try {
         // Verify the signature by appending it to the data and passing it to the verifier
         CryptoPP::StringSource ss(signature + data, true,
@@ -341,7 +379,17 @@ struct Block {
     std::string prevHash;
     std::string hash;
     int nonce;
+ledger["OwnerVault"] = 1000000000; // Initialize Owner Vault
+ledger["UserVault"] = 6000000000;  // Initialize User Vault
+// config.h
+#pragma once
 
+const double OWNER_VAULT_INITIAL_BALANCE = 1'000'000'000.0;
+const double USER_VAULT_INITIAL_BALANCE = 6'000'000'000.0;
+#include "config.h"
+
+ledger["OwnerVault"] = OWNER_VAULT_INITIAL_BALANCE; // Initialize Owner Vault
+ledger["UserVault"] = USER_VAULT_INITIAL_BALANCE;  // Initialize User Vault
     Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
         : index(idx), transactions(txs), prevHash(prev), nonce(0) {
         timestamp = std::to_string(std::time(nullptr));
@@ -550,7 +598,7 @@ inline void rewardMiner(const std::string& miner, double reward, BlockchainConfi
         std::cerr << "[REWARD ERROR] Not enough funds in OwnerVault.\n";
     }
 }
-
+std::mutex ledgerMutex;
 // Genesis block creation
 void createGenesisTransaction(BlockchainConfig& config) {
     ledger["OwnerVault"] = config.ownerVault;
@@ -572,18 +620,7 @@ main(std::string generateSecureUsername() {
     for (int i = 0; i < 10; ++i) {
         username << charset[dist(rng)];
     }
-    return username.str();
-}
-)
-// Add this mutex to ensure thread safety for ledger operations
-std::mutex ledgerMutex;
-
-// Updated `transferOffChain` function with thread safety
-void transferOffChain(const std::string& user, double amount) {
-    std::lock_guard<std::mutex> lock(ledgerMutex);  // Lock for thread safety
-    if (ledger["UserVault"] >= amount) {
-        ledger["UserVault"] -= amount;
-        offChainLedger[user] += amount;
+   
 
         std::cout << "[INFO] Transferred " << amount << " coins off-chain for user: " << user << "\n";
         std::cout << "  On-Chain Balance: " << ledger["UserVault"] << "\n";
@@ -597,7 +634,27 @@ void transferOffChain(const std::string& user, double amount) {
 bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
     CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);
     bool result = false;
+// Add this mutex to ensure thread safety for ledger operations
+std::mutex ledgerMutex;
 
+// Updated `transferOffChain` function with thread safety
+void transferOffChain(const std::string& user, double amount) {
+    std::lock_guard<std::mutex> lock(ledgerMutex);  // Lock for thread safety
+
+    // Check if the User Vault has enough balance
+    if (ledger["UserVault"] >= amount) {
+        ledger["UserVault"] -= amount;             // Deduct amount from User Vault
+        offChainLedger[user] += amount;           // Add amount to the off-chain ledger for the user
+
+        // Logging transaction success
+        std::cout << "[INFO] Transferred " << amount << " coins off-chain for user: " << user << "\n"
+                  << "  On-Chain Balance: " << ledger["UserVault"] << "\n"
+                  << "  Off-Chain Balance: " << offChainLedger[user] << "\n";
+    } else {
+        // Logging transaction failure
+        std::cerr << "[ERROR] Insufficient funds in User Vault for off-chain transfer.\n";
+    }
+}
     try {
         CryptoPP::StringSource ss(signature + data, true,
             new CryptoPP::SignatureVerificationFilter(
@@ -638,7 +695,9 @@ void fetchExternalTransactions() {
 void startServer(unsigned short port) {
     try {
         asio::io_context io_context;
-        asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+        Transaction rewardTx = {"Network", minerAddress, 25.0, "Reward"}; // Example block reward
+const double DEFAULT_BLOCK_REWARD = 25.0;
+Transaction rewardTx = {"Network", minerAddress, DEFAULT_BLOCK_REWARD, "Reward"}; // Configurable block reward
         std::cout << "Server started on port " << port << "\n";
 
         for (;;) {
@@ -693,7 +752,27 @@ public:
             // Add block reward
             Transaction rewardTx = {"Network", minerAddress, 25.0, "Reward"}; // Example block reward
             blockTxs.push_back(rewardTx);
+#include <filesystem>
+#include <fstream>
 
+bool isPackageInstalled(const std::string &packageName) {
+    std::ifstream packageFile("/usr/bin/" + packageName);
+    return packageFile.is_open();
+}
+
+void fetchExternalTransactions() {
+    // Example: Replace direct system call with file handling or a library
+    std::ifstream scraperOutput("scraper_output.txt");
+    if (!scraperOutput.is_open()) {
+        std::cerr << "[ERROR] Failed to open scraper output file.\n";
+        return;
+    }
+
+    std::string line;
+    while (std::getline(scraperOutput, line)) {
+        std::cout << "[INFO] External transaction: " << line << "\n";
+    }
+}
             Block newBlock(chain.size(), blockTxs, last.hash);
 
             // Mine the block with difficulty adjustment
