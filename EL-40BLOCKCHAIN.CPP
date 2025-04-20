@@ -912,7 +912,171 @@ void startServer(unsigned short port) {
         std::cerr << "Server Error: " << e.what() << "\n";
     }
 }
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <mutex>
+#include <thread>
+#include <asio.hpp>
+#include <json/json.h> // For JSON parsing (install JSON for Modern C++ library)
+#include <crow_all.h>  // Crow library for web integration
 
+// Mutex for thread safety
+std::mutex nodeMutex;
+
+// Node Reputation System
+struct Node {
+    std::string name;
+    int reputation;
+    int load; // Current load handled by the node
+};
+
+// Global node list
+std::unordered_map<std::string, Node> nodes = {
+    {"Node1", {"Node1", 100, 0}},
+    {"Node2", {"Node2", 95, 0}},
+    {"Node3", {"Node3", 80, 0}}
+};
+
+// Blockchain Mock (For simplicity)
+struct Transaction {
+    std::string sender;
+    std::string receiver;
+    double amount;
+    std::string timestamp;
+};
+
+std::vector<Transaction> blockchain;
+std::unordered_map<std::string, double> ledger = {{"User1", 1000.0}, {"User2", 500.0}};
+
+// 1. Cross-Chain Interoperability
+void crossChainSync(const std::string& externalBlockchain) {
+    std::cout << "[INFO] Syncing with external blockchain: " << externalBlockchain << "\n";
+    // Mock: Fetch and integrate data from the external blockchain
+    // In a real implementation, this would use APIs or SDKs of the external blockchain
+    Transaction tx = {"ExternalUser", "User1", 50.0, "2025-04-20T00:00:00Z"};
+    blockchain.push_back(tx);
+    ledger["User1"] += 50.0;
+    std::cout << "[INFO] Synced transaction: " << tx.sender << " -> " << tx.receiver << ": " << tx.amount << "\n";
+}
+
+// 2. External Transaction Sync
+void fetchExternalTransactions() {
+    std::ifstream apiOutput("external_transactions.json"); // Mock API response
+    if (!apiOutput.is_open()) {
+        std::cerr << "[ERROR] Failed to open external transaction file.\n";
+        return;
+    }
+
+    Json::Value transactions;
+    apiOutput >> transactions;
+    for (const auto& tx : transactions) {
+        std::string sender = tx["sender"].asString();
+        std::string receiver = tx["receiver"].asString();
+        double amount = tx["amount"].asDouble();
+        std::string timestamp = tx["timestamp"].asString();
+        blockchain.push_back({sender, receiver, amount, timestamp});
+        ledger[receiver] += amount;
+        std::cout << "[INFO] Synced external transaction: " << sender << " -> " << receiver << ": " << amount << "\n";
+    }
+}
+
+// 3. Load Balancing
+void distributeLoad(const std::string& task) {
+    std::lock_guard<std::mutex> lock(nodeMutex);
+    Node* bestNode = nullptr;
+
+    for (auto& [name, node] : nodes) {
+        if (!bestNode || node.load < bestNode->load) {
+            bestNode = &node;
+        }
+    }
+
+    if (bestNode) {
+        bestNode->load++;
+        std::cout << "[INFO] Task '" << task << "' assigned to " << bestNode->name << " (Load: " << bestNode->load << ")\n";
+    } else {
+        std::cerr << "[ERROR] No available nodes to handle the task.\n";
+    }
+}
+
+// 4. Node Reputation System
+void updateNodeReputation(const std::string& nodeName, int change) {
+    std::lock_guard<std::mutex> lock(nodeMutex);
+    if (nodes.find(nodeName) != nodes.end()) {
+        nodes[nodeName].reputation += change;
+        std::cout << "[INFO] Updated reputation for " << nodeName << " to " << nodes[nodeName].reputation << "\n";
+    } else {
+        std::cerr << "[ERROR] Node not found: " << nodeName << "\n";
+    }
+}
+
+// 5. Web Dashboard (Crow Integration)
+void startWebDashboard() {
+    crow::SimpleApp app;
+
+    // Display blockchain stats
+    CROW_ROUTE(app, "/stats")([]() {
+        Json::Value stats;
+        stats["total_blocks"] = (int)blockchain.size();
+        stats["total_users"] = (int)ledger.size();
+        Json::StreamWriterBuilder writer;
+        return crow::response(Json::writeString(writer, stats));
+    });
+
+    // Display ledger
+    CROW_ROUTE(app, "/ledger")([]() {
+        Json::Value ledgerJson;
+        for (const auto& [user, balance] : ledger) {
+            ledgerJson[user] = balance;
+        }
+        Json::StreamWriterBuilder writer;
+        return crow::response(Json::writeString(writer, ledgerJson));
+    });
+
+    // Start the web dashboard
+    std::cout << "[INFO] Starting web dashboard on http://localhost:8080\n";
+    app.port(8080).multithreaded().run();
+}
+
+// 6. Mobile App Integration
+void simulateMobileApp() {
+    // Mock mobile app interaction
+    std::cout << "[MOBILE APP] User1 checks balance: $" << ledger["User1"] << "\n";
+    std::cout << "[MOBILE APP] User2 sends 10 coins to User1.\n";
+
+    // Perform transaction
+    ledger["User1"] += 10;
+    ledger["User2"] -= 10;
+    blockchain.push_back({"User2", "User1", 10.0, "2025-04-20T01:00:00Z"});
+    std::cout << "[MOBILE APP] Transaction complete. New balance for User1: $" << ledger["User1"] << "\n";
+}
+
+int main() {
+    // Start web dashboard in a separate thread
+    std::thread dashboardThread(startWebDashboard);
+    dashboardThread.detach();
+
+    // Simulate Cross-Chain Interoperability
+    crossChainSync("ExternalBlockchain_123");
+
+    // Fetch external transactions
+    fetchExternalTransactions();
+
+    // Perform load balancing
+    distributeLoad("Sync Task 1");
+    distributeLoad("Sync Task 2");
+
+    // Update node reputation
+    updateNodeReputation("Node1", -5);
+
+    // Simulate mobile app interaction
+    simulateMobileApp();
+
+    return 0;
+}
 // Secure Communication Placeholder
 void handleClient(asio::ip::tcp::socket socket) {
     try {
@@ -924,6 +1088,32 @@ void handleClient(asio::ip::tcp::socket socket) {
         std::cout << "Received message: " << message << "\n";
     } catch (const std::exception& e) {
         std::cerr << "Client Error: " << e.what() << "\n";
+    }
+// Basic transaction ledger
+std::vector<Transaction> blockchain;
+std::unordered_map<std::string, double> userBalances = {
+    {"User1", 1000.0},
+    {"User2", 500.0},
+    {"User3", 200.0}
+};
+
+// Fraud Detection Function
+bool isFraudulent(const Transaction& tx) {
+    // Example ML-inspired fraud detection rules:
+    // 1. Transaction amount exceeds a certain threshold.
+    // 2. Multiple transactions from the same sender in a short time.
+    // 3. Insufficient funds (double spending attempt).
+
+    const double FRAUD_THRESHOLD = 10000.0; // Example threshold
+
+    if (tx.amount > FRAUD_THRESHOLD) {
+        std::cerr << "[FRAUD ALERT] Transaction flagged: Amount exceeds threshold.\n";
+        return true;
+    }
+
+    if (userBalances[tx.sender] < tx.amount) {
+        std::cerr << "[FRAUD ALERT] Transaction flagged: Insufficient funds.\n";
+        return true;
     }
 }
 #include "crow_all.h" // Include Crow library
