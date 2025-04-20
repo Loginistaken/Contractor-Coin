@@ -23,9 +23,74 @@
 #include "blockchain.h"     // Core blockchain functions
 #include "p2p_network.h"    // Peer-to-peer communication
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
+#include "external/crow/include/crow_all.h" // Crow web framework
 #include <regex>
 #include "external/crow/include/crow_all.h"
+// === Custom Hash Function (SHA-3) ===
+std::string EL40_Hash(const std::string& input) {
+    CryptoPP::SHA3_256 hash;
+    byte digest[CryptoPP::SHA3_256::DIGESTSIZE];
+    hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
 
+    CryptoPP::HexEncoder encoder;
+    std::string output;
+    encoder.Attach(new CryptoPP::StringSink(output));
+    encoder.Put(digest, sizeof(digest));
+    encoder.MessageEnd();
+    return output;
+}
+
+// === Transaction Structure ===
+struct Transaction {
+    std::string sender;
+    std::string receiver;
+    double amount;
+    std::string signature;
+    std::string timestamp;
+
+    Transaction(const std::string& from, const std::string& to, double amt, const std::string& sig)
+        : sender(from), receiver(to), amount(amt), signature(sig) {
+        auto now = std::chrono::system_clock::now();
+        std::time_t time = std::chrono::system_clock::to_time_t(now);
+        timestamp = std::ctime(&time);
+    }
+
+    std::string toString() const {
+        return sender + receiver + std::to_string(amount) + timestamp;
+    }
+};
+
+// === Block Structure ===
+struct Block {
+    int index;
+    std::string timestamp;
+    std::vector<Transaction> transactions;
+    std::string prevHash;
+    std::string hash;
+    int nonce;
+
+    Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
+        : index(idx), transactions(txs), prevHash(prev), nonce(0) {
+        timestamp = std::to_string(std::time(nullptr));
+        hash = generateHash();
+    }
+
+    std::string generateHash() const {
+        std::string toHash = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
+        for (const auto& tx : transactions) {
+            toHash += tx.toString();
+        }
+        return EL40_Hash(toHash);
+    }
+
+    void mineBlock(int difficulty) {
+        std::string target(difficulty, '0');
+        while (hash.substr(0, difficulty) != target) {
+            nonce++;
+            hash = generateHash();
+        }
+    }
+};
 // Include the necessary headers for cryptographic, blockchain, and P2P logic
 #include "crypto.h"       // Ensure this file defines cryptographic functions
 #include "blockchain.h"   // Ensure this file contains blockchain structures and core logic
@@ -203,21 +268,83 @@ std::mutex mtx;
 std::map<std::string, double> ledger;
 std::map<std::string, double> offChainLedger; // Tracks off-chain balances
 
-// Blockchain Network Configurations
-struct BlockchainConfig {
-    std::string coinName = "Contractor-coin";
-    std::string oxAddress;
-    std::string oxID;
-    std::string genesisBlock;
-    double totalSupply = 7000000000;      // Total supply of coins
-    double burnRate = 0.02;              // Default burn rate (2%)
-    double ownerVault = 1000000000;      // Owner's vault (1 billion coins)
-    double userVault = 6000000000;       // User's vault (6 billion coins)
-    double transactionFee = 0.005;       // 0.5% transaction fee
-    double maintenanceFee = 0.00001;     // 0.001% maintenance fee
-    std::string maintenanceVault = "0xMaintenanceVault"; // Vault address
-    std::string firebaseUrl = "https://your-firebase-project.firebaseio.com/";
+// === Block Structure ===
+struct Block {
+    int index;
+    std::string timestamp;
+    std::vector<Transaction> transactions;
+    std::string prevHash;
+    std::string hash;
+    int nonce;
+
+    Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
+        : index(idx), transactions(txs), prevHash(prev), nonce(0) {
+        timestamp = std::to_string(std::time(nullptr));
+        hash = generateHash();
+    }
+
+    std::string generateHash() const {
+        std::string toHash = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
+        for (const auto& tx : transactions) {
+            toHash += tx.toString();
+        }
+        return EL40_Hash(toHash);
+    }
+
+    void mineBlock(int difficulty) {
+        std::string target(difficulty, '0');
+        while (hash.substr(0, difficulty) != target) {
+            nonce++;
+            hash = generateHash();
+        }
+    }
 };
+
+// === EL-40 Blockchain Class ===
+class EL40_Blockchain {
+private:
+    std::vector<Block> chain;
+
+public:
+    EL40_Blockchain() {
+        chain.push_back(createGenesisBlock());
+        ledger["OwnerVault"] = 1000000000; // Initialize Owner Vault
+        ledger["UserVault"] = 6000000000;  // Initialize User Vault
+    }
+
+    Block createGenesisBlock() {
+        return Block(0, {}, "0");
+    }
+
+    void addBlock(const std::vector<Transaction>& transactions) {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        Block last = chain.back();
+        Block newBlock(chain.size(), transactions, last.hash);
+
+        int difficulty = chain.size() / 10 + 1; // Adjust difficulty as blockchain grows
+        newBlock.mineBlock(difficulty);
+
+        chain.push_back(newBlock);
+
+        for (auto& tx : transactions) {
+            ledger[tx.sender] -= tx.amount;
+            ledger[tx.receiver] += tx.amount;
+        }
+
+        std::cout << "[INFO] Block added with hash: " << newBlock.hash << "\n";
+    }
+
+    void displayChain() const {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        for (const auto& block : chain) {
+            std::cout << "Block Index: " << block.index << "\n"
+                      << "Timestamp: " << block.timestamp << "\n"
+                      << "Hash: " << block.hash << "\n"
+                      << "Previous Hash: " << block.prevHash << "\n\n";
+        }
+    }
+};
+
 #include <iostream>
 #include <cmath>
 
