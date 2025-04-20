@@ -30,14 +30,8 @@ Crow Language allows users to:
 
     Embed blockchain transaction links and live widgets, such as UserVault modules, for interactive and secure on-site blockchain activity.
 
-    Integrate decentralized applications (dApps) directly into the user interface.
+    Integrate partially decentralized applications (dApps) directly into the user interface.
 
-Example:
-
-crow::layout("storefront")
-    .header("Welcome to the Marketplace")
-    .content("Available Products")
-    .block("Buy Now", crow::vault("0xUSERVAULT").withAmount(50).withItem("Digital Artwork"));
 
 2. On-Chain Website Deployment
 
@@ -79,9 +73,6 @@ Example API Response:
   "buyer": "0xUSER",
   "seller": "0xVENDOR"
 }
-
-Conclusion
-
 Crow Language combines the accessibility of modern web development with the power and trust of blockchain technology. With seamless deployment, real-time blockchain interactions, and  semi-decentralized hosting, it represents a new standard in how websites are built, monetized, and secured in the Web3 era.
 
 Use Case: Advertising Website with Blockchain Commerce
