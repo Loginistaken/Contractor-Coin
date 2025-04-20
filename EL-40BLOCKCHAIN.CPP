@@ -93,23 +93,29 @@ void testCryptoFunctionality() {
 
     std::cout << "SHA-3 hash computed successfully.\n";
 }
-#include <iostream>
+
 #include <cstdlib> // For system() command
-#include <fstream>
+
 #include <thread>
 #include <chrono>
 
 // Utility function to execute shell commands and check for success
 bool executeCommand(const std::string &command) {
     int result = std::system(command.c_str());
+    if (result != 0) {
+        std::cerr << "[ERROR] Command failed: " << command 
+                  << " (Error Code: " << result << ")\n";
+    }
     return result == 0;
 }
 
-// Function to check if a package is installed
 bool isPackageInstalled(const std::string &packageName) {
     std::string checkCommand = "dpkg -s " + packageName + " > /dev/null 2>&1";
     return executeCommand(checkCommand);
 }
+
+// Function to check if a package is installed
+
 
 // Function to install LevelDB
 
@@ -438,7 +444,6 @@ private:
     }
 };
 
-#include <iostream>
 #include <cmath>
 
 class ContractorCoin {
@@ -771,10 +776,7 @@ public:
 #include <filesystem>
 #include <fstream>
 
-bool isPackageInstalled(const std::string &packageName) {
-    std::ifstream packageFile("/usr/bin/" + packageName);
-    return packageFile.is_open();
-}
+
 
 void fetchExternalTransactions() {
     // Example: Replace direct system call with file handling or a library
@@ -934,14 +936,21 @@ void cancelNodeAgreement(const std::string& username) {
     std::lock_guard<std::mutex> lock(agreementMutex); // Thread-safe access
     std::cout << "[INFO] Canceling node agreement for user: " << username << "\n";
 
-    // Your logging logic
+    /void cancelNodeAgreement(const std::string& username) {
+    std::lock_guard<std::mutex> lock(agreementMutex);
+    std::cout << "[INFO] Canceling node agreement for user: " << username << "\n";
+
     std::ofstream logFile("node_agreement_log.txt", std::ios::app);
     if (!logFile.is_open()) {
         std::cerr << "[ERROR] Failed to open 'node_agreement_log.txt' for writing.\n";
-        return; // Exit the function gracefully
+        return;
     }
     logFile << "User: " << username << ", Agreement: Canceled\n";
     logFile.close();
+
+    authorizedNodes[username] = false;
+    std::cout << "[INFO] Node connection disabled for user: " << username << "\n";
+}
 
     // Disable node connection
     authorizedNodes[username] = false; // Mark the node as unauthorized
