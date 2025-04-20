@@ -106,6 +106,71 @@ void testCryptoFunctionality() {
 
     std::cout << "SHA-3 hash computed successfully.\n";
 }
+#include <iostream>
+#include <cstdlib> // For system() command
+#include <fstream>
+#include <thread>
+#include <chrono>
+
+// Utility function to execute shell commands and check for success
+bool executeCommand(const std::string &command) {
+    int result = std::system(command.c_str());
+    return result == 0;
+}
+
+// Function to check if a package is installed
+bool isPackageInstalled(const std::string &packageName) {
+    std::string checkCommand = "dpkg -s " + packageName + " > /dev/null 2>&1";
+    return executeCommand(checkCommand);
+}
+
+// Function to install LevelDB
+void installLevelDB() {
+    std::cout << "[INFO] Checking for LevelDB installation...\n";
+    if (!isPackageInstalled("libleveldb-dev")) {
+        std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
+        if (executeCommand("sudo apt update && sudo apt install -y libleveldb-dev")) {
+            std::cout << "[SUCCESS] LevelDB installed successfully.\n";
+        } else {
+            std::cerr << "[ERROR] Failed to install LevelDB. Please check your package manager.\n";
+        }
+    } else {
+        std::cout << "[INFO] LevelDB is already installed.\n";
+    }
+}
+
+// Function to install Asio
+void installAsio() {
+    std::cout << "[INFO] Checking for Asio installation...\n";
+    if (!isPackageInstalled("libasio-dev")) {
+        std::cout << "[INFO] Asio not found. Installing Asio...\n";
+        if (executeCommand("sudo apt update && sudo apt install -y libasio-dev")) {
+            std::cout << "[SUCCESS] Asio installed successfully.\n";
+        } else {
+            std::cerr << "[ERROR] Failed to install Asio. Please check your package manager.\n";
+        }
+    } else {
+        std::cout << "[INFO] Asio is already installed.\n";
+    }
+}
+
+// Main function to handle installation
+int main() {
+    std::cout << "=== Installation Script for LevelDB and Asio ===\n";
+
+    // Install LevelDB
+    installLevelDB();
+
+    // Add a delay for better user experience
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    // Install Asio
+    installAsio();
+
+    std::cout << "=== Installation Process Completed ===\n";
+
+    return 0;
+}
 
 void testLevelDBFunctionality() {
     // Example: Using LevelDB for basic database operations
@@ -355,19 +420,19 @@ private:
     uint64_t totalSupply;  // Total coin supply
 
 public:
-    ContractorCoin() : value(0.000000000000000001), sales(0), totalSupply(0) {}
+    ContractorCoin() : value(0.00001), sales(0), totalSupply(0) {}
 
     void sellCoin(uint64_t numCoins) {
         sales += numCoins;
 
-        // Phase 1: Rapid increase for first 16 sales (starting with 18 decimals)
-        if (sales <= 16) {
+        // Phase 1: Rapid increase for first 40 sales (starting with 5 decimals)
+        if (sales <= 40) {
             value *= pow(10, sales); // Rapid increase for initial transactions
         }
         // Phase 2: Gradual increase until value reaches $0.001
         else if (sales <= 100000) {
             if (value < 0.001) {
-                value += 0.000000000000000001; // Gradual increase
+                value += 0.00001; // Gradual increase
             }
         }
         // Phase 3: Accelerate the value growth until $1 by 1 million sales
