@@ -357,12 +357,7 @@ bool approveBlockAI(const std::string& blockData) {
 }
 }
 
-// Machine Learning Model Placeholder for Block Approval
-bool approveBlockAI(const std::string& blockData) {
-    // Future AI logic for approving/rejecting blocks
-    std::cout << "ML Model analyzing block: " << blockData << "... Approved!\n";
-    return true;
-}
+/
 
 // Difficulty Adjustment for Fragments
 int adjustDifficulty(int blockHeight) {
@@ -945,6 +940,24 @@ int main() {
     std::cout << "Node connected successfully for user: " << username << "\n";
 
     return 0;
+}
+// Function to cancel the node connection agreement
+void cancelNodeAgreement(const std::string& username) {
+    std::lock_guard<std::mutex> lock(agreementMutex); // Thread-safe access
+    std::cout << "[INFO] Canceling node agreement for user: " << username << "\n";
+
+    // Log the cancellation
+    std::ofstream logFile("node_agreement_log.txt", std::ios::app);
+    if (logFile.is_open()) {
+        logFile << "User: " << username << ", Agreement: Canceled\n";
+        logFile.close();
+    } else {
+        std::cerr << "[ERROR] Unable to open agreement log file for cancellation.\n";
+    }
+
+    // Disable node connection
+    authorizedNodes[username] = false; // Mark the node as unauthorized
+    std::cout << "[INFO] Node connection disabled for user: " << username << "\n";
 }
 #include <iostream>
 #include <fstream>
