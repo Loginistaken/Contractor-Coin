@@ -112,19 +112,7 @@ bool isPackageInstalled(const std::string &packageName) {
 }
 
 // Function to install LevelDB
-void installLevelDB() {
-    std::cout << "[INFO] Checking for LevelDB installation...\n";
-    if (!isPackageInstalled("libleveldb-dev")) {
-        std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
-     void installLevelDB() {
-    std::cout << "[INFO] Checking for LevelDB installation...\n";
-    if (!isPackageInstalled("libleveldb-dev")) {
-        std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
-        if (std::system("sudo apt update && sudo apt install -y libleveldb-dev") != 0) {
-            std::cerr << "[ERROR] Failed to install LevelDB. Please check your package manager.\n";
-        }
-    }
-}
+
     } else {
      // Utility function to execute shell commands and check for success
 bool executeCommand(const std::string &command) {
