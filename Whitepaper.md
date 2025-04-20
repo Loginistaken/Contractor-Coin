@@ -146,10 +146,10 @@ Value Dynamics and Supply Mechanism
 The value of Contractor Coin evolves through a structured progression over distinct phases, as governed by sales milestones. The algorithm ensures precision and adaptability, starting from an 18-decimal precision value and scaling with market activity. The five-phased progression is outlined below:
 
     Phase 1: Initial Rapid Growth
-    Starting at a value of 0.000000000000000001, the coin undergoes exponential growth during the first 16 transactions, increasing by powers of 10. This phase reflects the coin's capability to bootstrap its value in the initial stages of market adoption.
+    Starting at a value of 0.00001, the coin undergoes exponential growth during the first 40 transactions, increasing by powers of 10. This phase reflects the coin's capability to bootstrap its value in the initial stages of market adoption.
 
     Phase 2: Gradual Stabilization
-    Between 16 and 100,000 sales, the value grows incrementally by a micro-fraction (0.000000000000000001) per transaction, stabilizing at $0.001. This phase ensures controlled growth, maintaining market accessibility while fostering demand.
+    Between 40 and 100,000 sales, the value grows incrementally by a micro-fraction (0.000001) per transaction, stabilizing at $0.001. This phase ensures controlled growth, maintaining market accessibility while fostering demand.
 
     Phase 3: Acceleration to Maturity
     From 100,000 to 1 million sales, the coin enters an accelerated growth trajectory, increasing by 1% of its current value per transaction until reaching $1. This phase signals the coin's transition to maturity, aligning with increased market activity.
