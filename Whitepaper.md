@@ -82,13 +82,13 @@ Example API Response:
 
 Conclusion
 
-Crow Language combines the accessibility of modern web development with the power and trust of blockchain technology. With seamless deployment, real-time blockchain interactions, and decentralized hosting, it represents a new standard in how websites are built, monetized, and secured in the Web3 era.
+Crow Language combines the accessibility of modern web development with the power and trust of blockchain technology. With seamless deployment, real-time blockchain interactions, and  semi-decentralized hosting, it represents a new standard in how websites are built, monetized, and secured in the Web3 era.
 
 Use Case: Advertising Website with Blockchain Commerce
 
     Website Creation: A contractor uses Crow Language commands to design a promotional website for their services.
     Dynamic Linking: The website includes purchase links that redirect users to the UserVault.
-    Decentralized Hosting: The site is deployed on a decentralized storage network, ensuring security and availability.
+    Partially-Decentralized Hosting: The site is deployed on a decentralized storage network, ensuring security and availability.
     Instant Purchase: Customers click purchase links to complete transactions directly on the blockchain.
 
 Benefits
@@ -99,10 +99,10 @@ Benefits
     Increased Accessibility: External websites expand the reach of Contractor Coin to broader audiences, bridging blockchain and traditional web users.
 
 Future Vision
-The integration of Crow Language and external website functionality positions Contractor Coin as a versatile platform for decentralized commerce. Future enhancements may include advanced analytics for website performance, customizable smart contracts integrated into purchase workflows, and expanded API support for third-party platforms.
+The integration of Crow Language and external website functionality positions Contractor Coin as a versatile platform for partially-decentralized commerce. Future enhancements may include advanced analytics for website performance, customizable smart contracts integrated into purchase workflows, and expanded API support for third-party platforms.
 1. Introduction
 
-In the evolving landscape of decentralized finance (DeFi), Contractor Coin serves a specialized purpose: to support contractors, freelancers, and digital platforms with a secure, efficient, and flexible transaction system. As the global economy becomes more digitally native, the need for purpose-built cryptocurrencies with real-world utility grows. EL-40 Blockchain supports Contractor Coin by providing scalable consensus mechanisms and synchronization features, setting the stage for a secure contractor-driven financial ecosystem.
+In the evolving landscape of secure finance , Contractor Coin serves a specialized purpose: to support contractors, freelancers, and digital platforms with a secure, efficient, and flexible transaction system. As the global economy becomes more digitally native, the need for purpose-built cryptocurrencies with real-world utility grows. EL-40 Blockchain supports Contractor Coin by providing scalable consensus mechanisms and synchronization features, setting the stage for a secure contractor-driven financial ecosystem.
 2. EL-40 Blockchain Overview
 Metaverse Integration in Contractor Coin
 
@@ -115,21 +115,21 @@ The Contractor Coin ecosystem employs robust C++ features to facilitate metavers
     XML and JSON APIs: The system provides functionalities to connect with virtual platforms by parsing and exchanging data using standardized XML and JSON protocols.
     ASIO Networking: Utilizing asynchronous networking libraries (boost::asio), Contractor Coin supports multithreaded communication with metaverse nodes to ensure low-latency transaction propagation.
     Virtual Asset Management: Commands are written to handle the secure validation and exchange of virtual assets using RSA digital signatures, ensuring authenticity and non-repudiation.
-    Smart Contracts for Virtual Platforms: Contractor Coin's decentralized smart contracts enable automated transactions and agreements within metaverse environments, such as virtual real estate exchanges or in-game currency management.
+    Smart Contracts for Virtual Platforms: Contractor Coin's partially-decentralized smart contracts enable automated transactions and agreements within metaverse environments, such as virtual real estate exchanges or in-game currency management.
     Interoperability: The system is designed for interoperability, connecting with various metaverse ecosystems to validate identities, verify prices, and enable cross-platform asset movement.
 Node Access Agreement: Securing the Contractor Coin Network
 Abstract
 
-The Contractor Coin blockchain network is a decentralized platform designed for efficient peer-to-peer transactions and secure synchronization of blockchain data. To ensure the safety, reliability, and scalability of the network, a Node Access Agreement is introduced. This agreement formalizes the conditions under which external nodes can participate in the network, fostering a secure and cooperative environment for all participants.
+The Contractor Coin blockchain network is a data node connections that seperate it from your decentralized platform designed for efficient peer-to-peer transactions and secure synchronization of blockchain data. To ensure the safety, reliability, and scalability of the network, a Node Access Agreement is introduced. This agreement formalizes the conditions under which external nodes can participate in the network, fostering a secure and cooperative environment for all participants.
 Introduction
 
-Contractor Coin is a decentralized cryptocurrency built on a custom blockchain with a focus on security, transparency, and efficiency. The network allows participants to mine, process transactions, and synchronize blockchain data. However, as with any open decentralized system, the network is vulnerable to malicious activities such as Distributed Denial of Service (DDoS) attacks, unauthorized access, and resource abuse.
+Contractor Coin is a partially- decentralized cryptocurrency built on a custom blockchain with a focus on security, transparency, and efficiency. The network allows participants to mine, process transactions, and synchronize blockchain data. However, as with any open decentralized system, the network is vulnerable to malicious activities such as Distributed Denial of Service (DDoS) attacks, unauthorized access, and resource abuse.
 
 To address these challenges, the Contractor Coin network incorporates a Node Access Agreement. This agreement establishes a framework for secure connections between nodes, ensuring that all participants adhere to the network's rules and contribute to its integrity.
 Why Contractor Coin Needs a Node Access Agreement
 1. Ensuring Network Security
 
-The decentralized nature of the Contractor Coin network requires all nodes to work collaboratively. Without a formal agreement, malicious actors could exploit network vulnerabilities to disrupt operations. The Node Access Agreement enforces security measures, such as rate-limiting and request monitoring, to mitigate risks like DDoS attacks.
+The  nature of the Contractor Coin network requires all nodes to work collaboratively. Without a formal agreement, malicious actors could exploit network vulnerabilities to disrupt operations. The Node Access Agreement enforces security measures, such as rate-limiting and request monitoring, to mitigate risks like DDoS attacks.
 2. Maintaining Data Integrity
 
 Nodes are responsible for synchronizing blockchain transactions and maintaining an accurate ledger. Unauthorized or compromised nodes could introduce invalid transactions or corrupt data. By requiring participants to comply with the Node Access Agreement, the network ensures that only trusted nodes can contribute to the blockchain.
@@ -138,7 +138,7 @@ Nodes are responsible for synchronizing blockchain transactions and maintaining 
 Running a blockchain network involves computational and bandwidth costs. Unregulated nodes may burden the network with excessive requests, reducing performance for legitimate participants. The agreement includes safeguards, such as throttling mechanisms, to prevent resource abuse and maintain optimal network performance.
 4. Enabling Trust and Transparency
 
-A decentralized network thrives on trust among its participants. The Node Access Agreement fosters transparency by clearly outlining the responsibilities and privileges of each node. This clarity strengthens the trust between node operators, miners, and users, ensuring the network's long-term success.
+A partailly centralized network that relies on node data and user agreements to create secure transcations with api and hexidecimal informaiton. The Node Access Agreement fosters transparency by clearly outlining the responsibilities and privileges of each node. This clarity strengthens the trust between node operators, miners, and users, ensuring the network's long-term success.
 The Node Access Agreement Framework
 
     Acceptance of Terms
