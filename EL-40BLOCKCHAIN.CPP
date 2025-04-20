@@ -1108,13 +1108,111 @@ void startWebDashboard() {
 
 // 6. Mobile App Integration
 void simulateMobileApp() {
-    // Mock mobile app interaction
-    std::cout << "[MOBILE APP] User1 checks balance: $" << ledger["User1"] << "\n";
-    std::cout << "[MOBILE APP] User2 sends 10 coins to User1.\n";
+ #include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <cmath>
+#include <string>
+#include <chrono>
 
-    // Perform transaction
-    ledger["User1"] += 10;
-    ledger["User2"] -= 10;
+// Define thresholds (adjustable)
+const double MAX_TRANSACTION_AMOUNT = 5000000.0;   // Limit for transaction amount
+const int MAX_TRANSACTION_FREQUENCY = 1000;       // Limit for transaction frequency
+const std::string UNKNOWN_ACCOUNT = "UNKNOWN";    // Flag for unknown accounts
+
+// Transaction structure
+struct Transaction {
+    std::string sender;
+    std::string receiver;
+    double amount;
+    std::string timestamp;
+
+    Transaction(const std::string& from, const std::string& to, double amt, const std::string& time)
+        : sender(from), receiver(to), amount(amt), timestamp(time) {}
+};
+
+// Ledger to store balances
+std::unordered_map<std::string, double> ledger = {
+    {"User1", 5000.0},
+    {"User2", 250000000.0},
+    {"User3", 2000000.0}
+};
+
+// Historical transactions
+std::unordered_map<std::string, std::vector<Transaction>> transactionHistory;
+
+// Fraud detection function
+bool isFraudulent(const Transaction& tx) {
+    // Check if the transaction amount exceeds the maximum allowed
+    if (tx.amount > MAX_TRANSACTION_AMOUNT) {
+        std::cerr << "[FRAUD ALERT] Transaction flagged: Amount exceeds maximum allowed.\n";
+        return true;
+    }
+
+    // Check if the sender or receiver is flagged as UNKNOWN
+    if (tx.sender == UNKNOWN_ACCOUNT || tx.receiver == UNKNOWN_ACCOUNT) {
+        std::cerr << "[FRAUD ALERT] Transaction flagged: Involves an unknown account.\n";
+        return true;
+    }
+
+    // Analyze historical transactions for the sender
+    auto& history = transactionHistory[tx.sender];
+    int recentTransactions = 0;
+    auto currentTime = std::chrono::system_clock::now();
+
+    for (const auto& pastTx : history) {
+        // Calculate time difference (assume timestamp is in ISO 8601 format: "YYYY-MM-DDTHH:MM:SSZ")
+        auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{})); // Placeholder, parse timestamp
+        auto duration = std::chrono::duration_cast<std::chrono::hours>(currentTime - pastTime).count();
+
+        // Count transactions within the last 24 hours
+        if (duration <= 24) {
+            recentTransactions++;
+        }
+    }
+
+    // Check if the transaction frequency exceeds the maximum allowed
+    if (recentTransactions > MAX_TRANSACTION_FREQUENCY) {
+        std::cerr << "[FRAUD ALERT] Transaction flagged: Frequency exceeds maximum allowed.\n";
+        return true;
+    }
+
+    return false;
+}
+
+// Function to process a transaction
+void processTransaction(const Transaction& tx) {
+    std::cout << "[INFO] Processing transaction: " << tx.sender << " -> " << tx.receiver << ": $" << tx.amount << "\n";
+
+    if (isFraudulent(tx)) {
+        std::cerr << "[ERROR] Transaction blocked due to fraud detection.\n";
+        return;
+    }
+
+    // Update ledger and transaction history
+    ledger[tx.sender] -= tx.amount;
+    ledger[tx.receiver] += tx.amount;
+    transactionHistory[tx.sender].push_back(tx);
+
+    std::cout << "[INFO] Transaction completed successfully.\n";
+}
+
+// Simulation of transactions
+int main() {
+    // Example transaction data
+    std::vector<Transaction> transactions = {
+        {"User1", "User2", 50000.0, "2025-04-20T10:00:00Z"},
+        {"User1", "User3", 250000000.0, "2025-04-20T10:05:00Z"}, // Fraudulent: Amount exceeds limit
+        {"UNKNOWN", "User2", 1000.0, "2025-04-20T10:10:00Z"}, // Fraudulent: Involves unknown account
+        {"User3", "User2", 20000000.0, "2025-04-20T10:15:00Z"}
+    };
+
+    for (const auto& tx : transactions) {
+        processTransaction(tx);
+    }
+
+    return 0;
+}
     blockchain.push_back({"User2", "User1", 10.0, "2025-04-20T01:00:00Z"});
     std::cout << "[MOBILE APP] Transaction complete. New balance for User1: $" << ledger["User1"] << "\n";
 }
