@@ -697,22 +697,192 @@ private:
     }
 };
 
-// Node Access Agreement Function
-bool nodeAccessAgreement() {
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <mutex>
+
+// Mutex to ensure thread safety for agreement logs
+std::mutex agreementMutex;
+
+// Function to display the node connection agreement
+void displayAgreement() {
+    std::cout << "=== Node Connection Agreement ===\n";
+    std::cout << "By connecting to this node, you agree to the following terms:\n";
+    std::cout << "1. Data regarding cryptocurrency transactions may be viewed for security and compliance purposes.\n";
+    std::cout << "2. Your data will be handled in accordance with applicable privacy laws.\n";
+    std::cout << "3. You can revoke this agreement at any time by contacting support.\n";
+    std::cout << "4. All data will be securely stored and encrypted.\n";
+    std::cout << "Do you agree to these terms? (yes/no): ";
+}
+
+// Function to log agreement to a file
+void logAgreement(const std::string& username, bool agreed) {
+    std::lock_guard<std::mutex> lock(agreementMutex); // Thread-safe file access
+    std::ofstream logFile("node_agreement_log.txt", std::ios::app);
+
+    if (logFile.is_open()) {
+        logFile << "User: " << username << ", Agreement: " << (agreed ? "Accepted" : "Declined") << "\n";
+        logFile.close();
+    } else {
+        std::cerr << "[ERROR] Unable to open agreement log file.\n";
+    }
+}
+
+// Function to handle node connection agreement
+bool nodeAccessAgreement(const std::string& username) {
+    displayAgreement();
+
     std::string response;
-    std::cout << "\nEL-40 Blockchain: Do you accept the node connection agreement? (yes/no): ";
     std::cin >> response;
 
     if (response == "yes" || response == "Yes") {
         std::cout << "\nAccess granted. Connecting node...\n";
         std::cout << "\nThis connection allows nodes to sync transactions and view blockchain data securely.\n";
+
+        logAgreement(username, true); // Log acceptance
         return true;
     } else {
         std::cout << "\nAccess denied. Returning to homepage...\n";
+
+        logAgreement(username, false); // Log denial
         return false;
     }
 }
 
+int main() {
+    std::string username;
+    std::cout << "Enter your username: ";
+    std::cin >> username;
+
+    if (!nodeAccessAgreement(username)) {
+        return 0; // Exit if the user does not agree
+    }
+
+    // Proceed with node connection functionality here
+    std::cout << "Node connected successfully for user: " << username << "\n";
+
+    return 0;
+}
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <unordered_map>
+#include <mutex>
+#include <thread>
+#include <chrono>
+#include <asio.hpp>
+#include <crypto++/rsa.h>
+#include <crypto++/aes.h>
+#include <crypto++/osrng.h>
+#include <crypto++/base64.h>
+#include <crypto++/files.h>
+#include <crypto++/modes.h>
+#include <crypto++/sha.h>
+
+// Mutex for thread safety
+std::mutex nodeMutex;
+
+// Node access control
+std::unordered_map<std::string, bool> authorizedNodes = {{"Node1", true}, {"Node2", true}};
+
+// Function to encrypt data using AES
+std::string encryptData(const std::string& plainText, const std::string& key) {
+    std::string cipherText;
+    CryptoPP::AES::Encryption aesEncryption((byte*)key.c_str(), key.size());
+    CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, (byte*)key.c_str());
+
+    CryptoPP::StringSource encryptor(
+        plainText, true,
+        new CryptoPP::StreamTransformationFilter(cbcEncryption,
+            new CryptoPP::StringSink(cipherText)
+        )
+    );
+
+    return cipherText;
+}
+
+// Function to decrypt data using AES
+std::string decryptData(const std::string& cipherText, const std::string& key) {
+    std::string plainText;
+    CryptoPP::AES::Decryption aesDecryption((byte*)key.c_str(), key.size());
+    CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, (byte*)key.c_str());
+
+    CryptoPP::StringSource decryptor(
+        cipherText, true,
+        new CryptoPP::StreamTransformationFilter(cbcDecryption,
+            new CryptoPP::StringSink(plainText)
+        )
+    );
+
+    return plainText;
+}
+
+// Function to validate node access
+bool validateNodeAccess(const std::string& nodeName) {
+    std::lock_guard<std::mutex> lock(nodeMutex);
+    if (authorizedNodes.find(nodeName) != authorizedNodes.end() && authorizedNodes[nodeName]) {
+        return true;
+    }
+    return false;
+}
+
+// Function to fetch and process external transactions
+void fetchExternalTransactions() {
+    std::ifstream scraperOutput("scraper_output.txt");
+    if (!scraperOutput.is_open()) {
+        std::cerr << "[ERROR] Failed to open scraper output file.\n";
+        return;
+    }
+
+    std::string line;
+    while (std::getline(scraperOutput, line)) {
+        std::cout << "[INFO] Processing external transaction: " << line << "\n";
+        // Add logic here to integrate external transactions into the blockchain
+    }
+    scraperOutput.close();
+}
+
+// Function to log node activities
+void logNodeActivity(const std::string& nodeName, const std::string& activity) {
+    std::lock_guard<std::mutex> lock(nodeMutex);
+    std::ofstream logFile("node_activity_log.txt", std::ios::app);
+    if (logFile.is_open()) {
+        logFile << "Node: " << nodeName << ", Activity: " << activity << ", Timestamp: " << std::time(nullptr) << "\n";
+        logFile.close();
+    } else {
+        std::cerr << "[ERROR] Unable to open activity log file.\n";
+    }
+}
+
+// Function to simulate node operations after connection
+void nodeOperations(const std::string& nodeName) {
+    if (!validateNodeAccess(nodeName)) {
+        std::cerr << "[ERROR] Unauthorized node access attempt: " << nodeName << "\n";
+        return;
+    }
+
+    std::cout << "[INFO] Node " << nodeName << " connected successfully.\n";
+    logNodeActivity(nodeName, "Node connected.");
+
+    // Simulate fetching external transactions
+    fetchExternalTransactions();
+    logNodeActivity(nodeName, "Fetched external transactions.");
+}
+
+// Main function
+int main() {
+    // Simulate node connection
+    std::string nodeName;
+    std::cout << "Enter node name: ";
+    std::cin >> nodeName;
+
+    // Start node operations
+    std::thread nodeThread(nodeOperations, nodeName);
+    nodeThread.join();
+
+    return 0;
+}
 // Peer-to-Peer Networking
 void startServer(unsigned short port) {
     try {
