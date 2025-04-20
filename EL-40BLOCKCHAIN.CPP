@@ -403,12 +403,7 @@ class EL40_Blockchain {
 private:
     std::vector<Block> chain;
 
-public:
-    EL40_Blockchain() {
-        chain.push_back(createGenesisBlock());
-        ledger["OwnerVault"] = 1000000000; // Initialize Owner Vault
-        ledger["UserVault"] = 6000000000;  // Initialize User Vault
-    }
+
 
     Block createGenesisBlock() {
         return Block(0, {}, "0");
