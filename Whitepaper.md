@@ -221,7 +221,6 @@ Contractor Coin is designed with future expansion in mind:
 This project is distributed under the MIT License, a widely used and legally robust open-source license. The MIT License allows users to freely use, modify, distribute, and integrate this software while acknowledging the original creators.
 
 License Summary:
-
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the â€œSoftwareâ€), to deal in the Software without restrictionâ€¦
 
 Credits:
