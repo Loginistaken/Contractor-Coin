@@ -19,15 +19,12 @@
 #include <crypto++/osrng.h> // AutoSeededRandomPool for key generation
 #include <crypto++/base64.h> // Base64 encoding/decoding
 #include <leveldb/db.h>
-#include "crypto.h"         // Assumed cryptographic functions (signing, hashing)
 #include "blockchain.h"     // Core blockchain functions
 #include "p2p_network.h"    // Peer-to-peer communication
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
 #include "external/crow/include/crow_all.h" // Crow web framework
 #include <regex>
 
-// === Custom Hash Function (SHA-3) ===
-std::string EL40_Hash(const std::string& input) {
   
 
 // === Transaction Structure ===
@@ -119,10 +116,15 @@ void installLevelDB() {
     std::cout << "[INFO] Checking for LevelDB installation...\n";
     if (!isPackageInstalled("libleveldb-dev")) {
         std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
-        std::string checkCommand = "dpkg -s " + packageName + " > /dev/null 2>&1";
-std::system("python3 scraper.py");
+     void installLevelDB() {
+    std::cout << "[INFO] Checking for LevelDB installation...\n";
+    if (!isPackageInstalled("libleveldb-dev")) {
+        std::cout << "[INFO] LevelDB not found. Installing LevelDB...\n";
+        if (std::system("sudo apt update && sudo apt install -y libleveldb-dev") != 0) {
             std::cerr << "[ERROR] Failed to install LevelDB. Please check your package manager.\n";
         }
+    }
+}
     } else {
      // Utility function to execute shell commands and check for success
 bool executeCommand(const std::string &command) {
@@ -316,40 +318,43 @@ bool verifyTransaction(const std::string& data, const std::string& signature, co
                 verifier,
                 new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
                 CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
-            )
+ #include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <cctype>
+
+// Simulated AI-based block approval
 bool approveBlockAI(const std::string& blockData) {
-    // Future AI logic for approving/rejecting blocks
-    std::cout << "ML Model analyzing block: " << blockData << "... Approved!\n";
-    return true;
-}
-        );
-    } catch (const CryptoPP::Exception& e) {
-        // Enhanced exception message for better debugging
-        std::cerr << "[ERROR] Signature verification failed.\n"
-                  << "        Exception: " << e.what() << "\n"
-                  << "        Data: " << data << "\n"
-                  << "        Signature: " << signature << "\n";
-        return false;  // Signature verification failed
+    // Simulated heuristic: Check for suspicious patterns or anomalies in block data
+    std::cout << "[AI] Analyzing block data...\n";
+
+    // Example heuristic: Block data must not contain suspicious keywords (e.g., "fraud", "invalid")
+    std::vector<std::string> suspiciousKeywords = {"fraud", "invalid", "error", "malicious"};
+    std::string lowercaseBlockData = blockData;
+
+    // Convert block data to lowercase for case-insensitive comparison
+    std::transform(lowercaseBlockData.begin(), lowercaseBlockData.end(), lowercaseBlockData.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+
+    for (const auto& keyword : suspiciousKeywords) {
+        if (lowercaseBlockData.find(keyword) != std::string::npos) {
+            std::cerr << "[AI] Block rejected due to suspicious keyword: " << keyword << "\n";
+            return false; // Block rejected
+        }
     }
 
-    return result;  // Return whether the signature was valid
-}
-    try {
-        // Verify the signature by appending it to the data and passing it to the verifier
-        CryptoPP::StringSource ss(signature + data, true,
-            new CryptoPP::SignatureVerificationFilter(
-                verifier,
-                new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
-                CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
-            )
-        );
-    } catch (const CryptoPP::Exception& e) {
-        // Handle any exceptions that occur during verification
-        std::cerr << "Error verifying transaction: " << e.what() << '\n';
-        return false;  // Signature verification failed
+    // Example heuristic: Block data length must meet a minimum threshold
+    if (blockData.length() < 100) {
+        std::cerr << "[AI] Block rejected due to insufficient data length.\n";
+        return false;
     }
 
-    return result;  // Return whether the signature was valid
+    // Simulated success
+    std::cout << "[AI] Block approved.\n";
+    return true; // Block approved
+}
 }
 
 // Machine Learning Model Placeholder for Block Approval
@@ -379,9 +384,6 @@ struct Block {
     std::string prevHash;
     std::string hash;
     int nonce;
-ledger["OwnerVault"] = 1000000000; // Initialize Owner Vault
-ledger["UserVault"] = 6000000000;  // Initialize User Vault
-// config.h
 #pragma once
 
 const double OWNER_VAULT_INITIAL_BALANCE = 1'000'000'000.0;
@@ -606,7 +608,19 @@ void createGenesisTransaction(BlockchainConfig& config) {
     ledger["MaintenanceVault"] = 0.0;
 
     std::cout << "[INFO] Genesis transaction created:\n";
-    std::cout << "  Owner Vault: " << config.ownerVault << " coins\n";
+   main(std::string generateSecureUsername() {
+std::string generateSecureUsername() {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    std::default_random_engine rng(std::random_device{}());
+    std::uniform_int_distribution<> dist(0, sizeof(charset) - 2);
+
+    std::stringstream username;
+    username << "user_";
+    for (int i = 0; i < 10; ++i) {
+        username << charset[dist(rng)];
+    }
+    return username.str();
+}
     std::cout << "  User Vault: " << config.userVault << " coins\n";
     std::cout << "  Maintenance Vault: " << ledger["MaintenanceVault"] << " coins\n";
 }
@@ -683,7 +697,31 @@ void fetchExternalTransactions() {
         std::cerr << "[ERROR] Failed to open scraper output file.\n";
         return;
     }
+void startServer(unsigned short port) {
+    try {
+        // Define the minerAddress variable
+        std::string minerAddress = "Miner_123"; // Replace with a dynamic value if needed
 
+        asio::io_context io_context;
+        asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+        std::cout << "Server started on port " << port << "\n";
+
+        for (;;) {
+            asio::ip::tcp::socket socket(io_context);
+            acceptor.accept(socket);
+            std::cout << "New node connected!\n";
+
+            // Example of creating a reward transaction for the miner
+            Transaction rewardTx = {"Network", minerAddress, 25.0, "Reward"}; // Use minerAddress here
+            std::cout << "[INFO] Reward transaction created for miner: " << minerAddress << "\n";
+
+            // Handle the client connection in a separate thread
+            std::thread(handleClient, std::move(socket)).detach();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR] Server Error: " << e.what() << "\n";
+    }
+}
     std::string line;
     while (std::getline(scraperOutput, line)) {
         std::cout << "[INFO] External transaction: " << line << "\n";
