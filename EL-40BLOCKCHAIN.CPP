@@ -930,13 +930,23 @@ void cancelNodeAgreement(const std::string& username) {
     std::cout << "[INFO] Canceling node agreement for user: " << username << "\n";
 
     // Log the cancellation
+  void cancelNodeAgreement(const std::string& username) {
+    std::lock_guard<std::mutex> lock(agreementMutex); // Thread-safe access
+    std::cout << "[INFO] Canceling node agreement for user: " << username << "\n";
+
+    // Your logging logic
     std::ofstream logFile("node_agreement_log.txt", std::ios::app);
-    if (logFile.is_open()) {
-        logFile << "User: " << username << ", Agreement: Canceled\n";
-        logFile.close();
-    } else {
-        std::cerr << "[ERROR] Unable to open agreement log file for cancellation.\n";
+    if (!logFile.is_open()) {
+        std::cerr << "[ERROR] Failed to open 'node_agreement_log.txt' for writing.\n";
+        return; // Exit the function gracefully
     }
+    logFile << "User: " << username << ", Agreement: Canceled\n";
+    logFile.close();
+
+    // Disable node connection
+    authorizedNodes[username] = false; // Mark the node as unauthorized
+    std::cout << "[INFO] Node connection disabled for user: " << username << "\n";
+}
 
     // Disable node connection
     authorizedNodes[username] = false; // Mark the node as unauthorized
