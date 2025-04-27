@@ -252,8 +252,20 @@ Token Utility & Economics:
 
 Contractor Coin’s value evolves through a dynamic, algorithm-driven model that aligns coin growth with user adoption. This system consists of five distinct phases, each defined by the total number of successful transactions and associated market behaviors.
 Phase-Based Value Progression:
+5.1 Ownership Structure and Blockchain Dynamics
 
-    Phase 1 – Initial Rapid Growth
+The Contractor Coin System begins with a predefined supply of 7 billion coins, divided into two distinct vaults:
+
+    Owner Vault: 1 billion coins
+
+    User Vault: 6 billion coins
+
+This dual-vault distribution model creates a hybrid structure, blending the strengths of both centralized and decentralized systems.
+
+The Owner Vault represents the project's core treasury, ensuring sustainable development, ecosystem expansion, and network stability. The User Vault empowers the broader community by facilitating accessibility, distribution, and organic growth.
+
+Although ownership of the Owner Vault introduces a degree of centralization, the operational flow, distribution mechanisms, and transactional transparency across the EL-40 Blockchain maintain the core virtues of decentralization. This structure makes the system partially centralized, striking a strategic balance: it allows governance and security measures while preserving user freedom, peer-to-peer interactions, and blockchain autonomy.
+ Phase 1 – Initial Rapid Growth
     Launching at $0.00001, the coin experiences exponential growth during the first 40 transactions, increasing by powers of 10. This reflects rapid early adoption and liquidity bootstrapping.
 
     Phase 2 – Gradual Stabilization
