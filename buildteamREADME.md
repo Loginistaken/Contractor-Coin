@@ -1,6 +1,6 @@
 🎯 Promotional Introduction (for building team / inspiring developers) 🌟 Introducing Contractor Coin 🌟
 
-"Contractor-Coin is laying the foundation for the next era of business and construction,— building the Blockchain economy of tomorrow, one contract at a time.". ✨ Contractor Coin: Architects of the New Digital Civilization
+"Contractor-Coin is laying the foundation for the next era of business and construction,— building the Blockchain economy of tomorrow, one contract at a time.". ✨ Contractor Coin: Architects of the New Digital Civilization, as to implement quite vaguely the team as plans if excepted to become availble on metaverse, where it maybecome asset in a digital world.
 
 In the early days of the blockchain revolution, a few complex minds laid the foundations of new worlds. Today, another foundation is being formed — but this time, it belongs to those who meet the criteria of becoming team members.
 
