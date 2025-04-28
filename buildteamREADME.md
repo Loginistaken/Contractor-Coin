@@ -16,7 +16,7 @@ Powered by the EL-40 Blockchain, written in C++ for unmatched speed, security, a
 
 With energy-efficient mining, transaction-driven value growth, and transparent governance built into its DNA, Contractor Coin is made for those who build — not just speculate.
 
-💬 We are seeking the dreamers, the coders, the engineers, architects intergrating other blockchains compabilty such as becomeing Web3 friendly.
+💬 We are seeking the dreamers, the coders, the engineers, architects intergrating other blockchains compabilty such as becoming Web3 friendly.
 
 If a new era was built by computer professionals, and prosperity was only investing ,don't 'worry it's not too late Contractor Coin will offer another chance, being built by Contractors of the Future — people like you.
 
