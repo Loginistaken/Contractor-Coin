@@ -2,7 +2,7 @@
 
 "Contractor-Coin is laying the foundation for the next era of business and construction,— building the Blockchain economy of tomorrow, one contract at a time.". ✨ Contractor Coin: Architects of the New Digital Civilization
 
-In the early days of the blockchain revolution, a few complex minds laid the foundations of new worlds. Today, another foundation is being formed — but this time, it belongs to you.
+In the early days of the blockchain revolution, a few complex minds laid the foundations of new worlds. Today, another foundation is being formed — but this time, it belongs to those who meet the criteria of becoming team members.
 
 Welcome to Contractor Coin, a first-of-its-kind economy for the architects of tomorrow, built on the pioneering EL-40 Blockchain. This is an origin, a fork in the cross roads of time where busniess finance meets the computer architecture, waiting for designers and investors will you choose to become part of the team?
 
