@@ -4,9 +4,9 @@
 
 In the early days of the blockchain revolution, a few complex minds laid the foundations of new worlds. Today, another foundation is being formed — but this time, it belongs to those who meet the criteria of becoming team members.
 
-Welcome to Contractor Coin, a first-of-its-kind economy for the architects of tomorrow, built on the pioneering EL-40 Blockchain. This is an origin, a fork in the cross roads of time where busniess finance meets the computer architecture, waiting for designers and investors will you choose to become part of the team?
+Welcome to Contractor Coin, a first-of-its-kind a triple- vault on board onboard EL-40 BLOCKCHAIN user/owner & maintence vaults , coins are  minted on deployment of coin with the privacy of almost decentralized transaction as the node agreement barley surpass notorious blockchain node to computer connection we step a bit further for security, built on the pioneering EL-40 Blockchain, the code uses SHA-3 to generate latest secure technology creating 64 charecter ox hexidecimal. This is an origin, a fork in the cross roads of time where busniess finance meets the computer architecture, waiting for designers and investors will you choose to become part of the team?
 
-Contractor Coin is a call to those who still believe technology can remake the world: engineers, coders, cryptographers, economists, artists — the builders of the next civilization.
+Contractor Coin is a call to those who still believe technology can remake the world: engineers, coders, cryptographers, economists, artists — the builders of the next step in the evolution of crypto coin.
 
 In this enrollment we reflect our responsibilities as organized team members asigned to the professional position all members will be considered valuable. An acomplishment for investors and development team as well a team profit implemementing substantial compensation in coin ownership as members earn, wealth is forged. 
 
