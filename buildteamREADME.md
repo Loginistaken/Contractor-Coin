@@ -14,15 +14,15 @@ This is a new oppertunity offered for those who were too young to invest in earl
 
 Contractor Coin is not just another cryptocurrency. It’s an opertunity for next generation computer scientist and investors. It’s an economy of innovation, trust, and freedom, designed for the builders of tomorrow.
 
-Powered by the EL-40 Blockchain, written in C++ for unmatched speed, security, and efficiency — Contractor Coin is the foundation for a new era where freelancers, developers, businesses, and digital creators thrive without borders.
+Powered by the EL-40 Blockchain, written in C++ for unmatched speed, security, and efficiency Contractor-Coin is the foundation for a new era where freelancers, developers, businesses, and digital creators thrive without borders.
 
 With energy-efficient mining, transaction-driven value growth, and transparent governance built into its DNA, Contractor Coin is made for those who build — not just speculate.
 
 💬 We are seeking the dreamers, the coders, the engineers, architects intergrating other blockchains compabilty such as becoming Web3 friendly.
 
-If a new era was built by computer professionals, and prosperity was only investing ,don't 'worry it's not too late Contractor Coin will offer another chance, being built by Contractors of the Future — people like you.
+If a new era was built by computer professionals, and prosperity was only investing ,don't worry it's not too late Contractor Coin will offer another chance, being built by Contractors of the Future — inovatives of the next generation to create a new digital economy lead by renowned role players.
 
-Join our movement. Help us code a better tomorrow. Contribute to the whitepaper, the C++ core, or Crow Language development — and earn your rightful rewards as we build the decentralized world together.
+Join our team. Help us code a better tomorrow. Contribute to the whitepaper, the C++ core, or Crow Language development — and earn your rightful rewards as we build the partially-decentralized world together.
 
 🚀 Your contributions won't just be recognized — they will be enshrined on the blockchain itself.
 
