@@ -12,7 +12,7 @@ In this enrollment we reflect our responsibilities as organized team members asi
 
 This is a new oppertunity offered for those who were too young to invest in early major crypto assests or for those too new to programming then giving them a chance now to exploit their areas of expertise in progressing digital assets. This is a chance for investors to get started as well as prospects in the developement world to get there name out. The team  hopes for (in the collaberation of team production) to connect with a well-renowned programmer in the crypto development sceene, who has prior work in reguarding theses needed fields, and help management ideas as we will address criteria needed pertaining and demonstrated in this development project. 
 
-Contractor Coin is not just another cryptocurrency. It’s an opertunity for next generation computer scientist and investors. It’s an economy of innovation, trust, and freedom, designed for the builders of tomorrow.
+Contractor Coin giving reason for next generation computer scientist and investors to be intrigued. It’s an economy of innovation, trust, and freedom, designed for the builders of tomorrow.
 
 Powered by the EL-40 Blockchain, written in C++ for unmatched speed, security, and efficiency Contractor-Coin is the foundation for a new era where freelancers, developers, businesses, and digital creators thrive without borders.
 
