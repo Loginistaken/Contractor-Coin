@@ -40,8 +40,9 @@ struct Transaction {
         auto now = std::chrono::system_clock::now();
         std::time_t time = std::chrono::system_clock::to_time_t(now);
         timestamp = std::ctime(&time);
-   std::string toString() const {
+ std::string toString() const {
     return sender + receiver + std::to_string(amount) + timestamp + signature;
+}
 }
 };
 
@@ -240,7 +241,7 @@ using namespace std;
  * 
  * @param input The input string to be hashed.
  * @return The hexadecimal-encoded SHA-3 hash of the input.
- std::string EL40_Hash(const std::string &input) {
+std::string EL40_Hash(const std::string &input) {
     using namespace CryptoPP;
 
     SHA3_256 hash;
@@ -253,8 +254,7 @@ using namespace std;
     encoder.MessageEnd();
 
     return output;
-}
-std::string EL40_Hash(const std::string& input) {
+}g EL40_Hash(const std::string& input) {
     using namespace CryptoPP;
 
     SHA3_256 hash;
@@ -490,6 +490,7 @@ void mintCoins(uint64_t numCoins) {
     }
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
+}
 }
         // Minting mechanism: Mint 0.5 billion coins after 1 billion sales
         if (sales >= 1000000000) {
