@@ -252,6 +252,7 @@ std::string signTransaction(const std::string& data, const CryptoPP::RSA::Privat
 /**
  * @brief Verifies the authenticity of a digital signature.
  *std::tm tm = {};
+std::tm tm = {};
 std::istringstream ss("2025-04-20T10:00:00");
 ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
 auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&tm));
@@ -266,8 +267,7 @@ auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&tm));
 // Function to verify the authenticity of a digital signature
 bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
     CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);  // RSA Verifier object
-    bool result = false;
-bool approveBlockAI(const std::string &blockData) {
+   bool approveBlockAI(const std::string &blockData) {
     std::cout << "[AI] Analyzing block data...\n";
 
     // Check for suspicious keywords
@@ -288,25 +288,6 @@ bool approveBlockAI(const std::string &blockData) {
     std::cout << "[AI] Block approved.\n";
     return true;
 }
-    std::cout << "[AI] Block approved.\n";
-    return true;
-}
-
-    // Validate block length
-    if (blockData.length() < 100 || blockData.length() > 10000) {
-        std::cerr << "[AI] Block rejected due to invalid data length.\n";
-        return false;
-    }
-
-    std::cout << "[AI] Block approved.\n";
-    return true;
-}
-    // Example heuristic: Block data length must meet a minimum threshold
-    if (blockData.length() < 100) {
-        std::cerr << "[AI] Block rejected due to insufficient data length.\n";
-        return false;
-    }
-
     // Simulated success
     std::cout << "[AI] Block approved.\n";
     return true; // Block approved
@@ -465,16 +446,6 @@ public:
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
 }
 
-    // Simulate sales
-    for (int i = 1; i <= 1500000; ++i) {
-        coin.sellCoin(1);
-        if (i % 10000 == 0) { // Display status every 10,000 sales
-            coin.displayStatus();
-        }
-    }
-
-    return 0;
-}
 // === ContractorCoin_Core.h ===
 #pragma once
 #include <string>
@@ -1253,6 +1224,10 @@ auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{}));
 // Historical transactions
   
 std::unordered_map<std::string, std::vector<Transaction>> transactionHistory;
+  std::tm tm = {};
+std::istringstream ss("2025-04-20T10:00:00");
+ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&tm));
 // Proper ISO 8601 timestamp parsing logic
 auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{}));
 // Fraud detection function
