@@ -27,31 +27,6 @@
   
 
 // === Transaction Structure ===
-struct Transaction {
-    std::string sender;
-    std::string receiver;
-    double amount;
-    std::string signature;
-    std::string timestamp;
-
-   struct Transaction {
-    std::string sender;
-    std::string receiver;
-    double amount;
-    std::string signature;
-    std::string timestamp;
-
-    Transaction(const std::string& from, const std::string& to, double amt, const std::string& sig)
-        : sender(from), receiver(to), amount(amt), signature(sig) {
-        auto now = std::chrono::system_clock::now();
-        std::time_t time = std::chrono::system_clock::to_time_t(now);
-        timestamp = std::ctime(&time);
-    }
-
-    std::string toString() const {
-        return sender + receiver + std::to_string(amount) + timestamp + signature;
-    }
-};  // Add this closing brace
 
 // === Block Structure ===
 struct Block {
@@ -266,15 +241,28 @@ using namespace std;
 }
 
 /**
- * @brief Signs a given data string using RSA private key.
+ * @brief Computes a SHA-3 (256-bit) hash for a given input string.
  * 
- * This function uses the RSA-PKCS1 v1.5 signing scheme (SHA-256 hashing)
- * to generate a digital signature for the provided data string.
+ * This function takes an input string, calculates its SHA-3 hash, and returns the
+ * hash value as a hexadecimal-encoded string.
  * 
- * @param data The data to be signed.
- * @param privateKey The RSA private key used for signing.
- * @return The generated digital signature as a string.
+ * @param input The input string to be hashed.
+ * @return The hexadecimal-encoded SHA-3 hash of the input.
  */
+std::string EL40_Hash(const std::string& input) {
+    using namespace CryptoPP;
+
+    SHA3_256 hash;
+    byte digest[SHA3_256::DIGESTSIZE];
+    hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
+
+    std::string output;
+    HexEncoder encoder(new StringSink(output));
+    encoder.Put(digest, sizeof(digest));
+    encoder.MessageEnd();
+
+    return output;
+}
 std::string signTransaction(const std::string& data, const CryptoPP::RSA::PrivateKey& privateKey) {
     CryptoPP::AutoSeededRandomPool rng;  // Random generator for cryptographic operations
     std::string signature;
@@ -294,7 +282,10 @@ std::string signTransaction(const std::string& data, const CryptoPP::RSA::Privat
 
 /**
  * @brief Verifies the authenticity of a digital signature.
- * 
+ * std::tm tm = {};
+std::istringstream ss("2025-04-20T10:00:00");
+ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&tm));
  * This function checks whether a given digital signature matches the provided data
  * using the corresponding RSA public key.
  * 
@@ -318,6 +309,16 @@ bool approveBlockAI(const std::string &blockData) {
             return false;
         }
     }
+
+    // Validate block length
+    if (blockData.length() < 100 || blockData.length() > 10000) {
+        std::cerr << "[AI] Block rejected due to invalid data length.\n";
+        return false;
+    }
+
+    std::cout << "[AI] Block approved.\n";
+    return true;
+}
 
     // Validate block length
     if (blockData.length() < 100 || blockData.length() > 10000) {
@@ -693,15 +694,22 @@ void fetchExternalTransactions() {
         std::cerr << "[ERROR] Failed to open scraper output file.\n";
         return;
     }
-void startServer(unsigned short port) {
+void fetchExternalTransactions() {
     try {
-        // Define the minerAddress variable
-        std::string minerAddress = "Miner_123"; // Replace with a dynamic value if needed
+        std::ifstream scraperOutput("scraper_output.txt");
+        if (!scraperOutput.is_open()) {
+            throw std::runtime_error("Failed to open scraper output file.");
+        }
 
-        asio::io_context io_context;
-        asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
-        std::cout << "Server started on port " << port << "\n";
-
+        std::string line;
+        while (std::getline(scraperOutput, line)) {
+            std::cout << "[INFO] External transaction: " << line << "\n";
+        }
+        scraperOutput.close();
+    } catch (const std::exception &e) {
+        std::cerr << "[ERROR] " << e.what() << "\n";
+    }
+}
         for (;;) {
             asio::ip::tcp::socket socket(io_context);
             acceptor.accept(socket);
