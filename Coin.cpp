@@ -464,18 +464,6 @@ public:
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
 }
-void mintCoins(uint64_t numCoins) {
-    if (numCoins <= 0) {
-        std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
-        return;
-    }
-    if (totalSupply + numCoins < totalSupply) {
-        std::cerr << "[ERROR] Overflow detected in total supply.\n";
-        return;
-    }
-    totalSupply += numCoins;
-    std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
-}
 
     // Simulate sales
     for (int i = 1; i <= 1500000; ++i) {
