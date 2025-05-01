@@ -222,23 +222,7 @@ using namespace std;
  * hash value as a hexadecimal-encoded string.
  * 
  * @param input The input string to be hashed.
- 
-}g EL40_Hash(const std::string& input) {
-    using namespace CryptoPP;
 
-    SHA3_256 hash;
-    byte digest[SHA3_256::DIGESTSIZE];
-    hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
-
-    // HexEncoder to convert the digest into a human-readable hexadecimal format
-    HexEncoder encoder;
-    std::string output;
-    encoder.Attach(new StringSink(output));  // Attach output string to the encoder
-    encoder.Put(digest, sizeof(digest));     // Encode the raw digest
-    encoder.MessageEnd();                    // Signal the end of encoding
-
-    return output;  // Return the hex-encoded hash
-}
 
 /**
  * @brief Computes a SHA-3 (256-bit) hash for a given input string.
@@ -474,21 +458,7 @@ public:
         else if (sales <= 1200000) {
             value += 1.0; // Slower increase after peaking
         }
-void mintCoins(uint64_t numCoins) {
-    if (numCoins <= 0) {
-        std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
-        return;
-    }
-    if (totalSupply + numCoins < totalSupply) {
-     void mintCoins(uint64_t numCoins) {
-    if (numCoins <= 0) {
-        std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
-        return;
-    }
-    if (totalSupply + numCoins < totalSupply) {
-        std::cerr << "[ERROR] Overflow detected in total supply.\n";
-        return;
-    }
+
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
 }
