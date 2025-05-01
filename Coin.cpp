@@ -40,12 +40,9 @@ struct Transaction {
         auto now = std::chrono::system_clock::now();
         std::time_t time = std::chrono::system_clock::to_time_t(now);
         timestamp = std::ctime(&time);
-    }
-
    std::string toString() const {
     return sender + receiver + std::to_string(amount) + timestamp + signature;
 }
-    }
 };
 
 // === Block Structure ===
@@ -243,8 +240,7 @@ using namespace std;
  * 
  * @param input The input string to be hashed.
  * @return The hexadecimal-encoded SHA-3 hash of the input.
- */
-std::string EL40_Hash(const std::string &input) {
+ std::string EL40_Hash(const std::string &input) {
     using namespace CryptoPP;
 
     SHA3_256 hash;
@@ -317,8 +313,7 @@ std::string signTransaction(const std::string& data, const CryptoPP::RSA::Privat
 bool verifyTransaction(const std::string& data, const std::string& signature, const CryptoPP::RSA::PublicKey& publicKey) {
     CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);  // RSA Verifier object
     bool result = false;
-
-   bool approveBlockAI(const std::string &blockData) {
+bool approveBlockAI(const std::string &blockData) {
     std::cout << "[AI] Analyzing block data...\n";
 
     // Check for suspicious keywords
@@ -339,8 +334,6 @@ bool verifyTransaction(const std::string& data, const std::string& signature, co
     std::cout << "[AI] Block approved.\n";
     return true;
 }
-    }
-
     // Example heuristic: Block data length must meet a minimum threshold
     if (blockData.length() < 100) {
         std::cerr << "[AI] Block rejected due to insufficient data length.\n";
@@ -504,11 +497,18 @@ void mintCoins(uint64_t numCoins) {
             sales = 0;            // Reset sales counter for the next cycle
         }
     }
-
-    void mintCoins(uint64_t numCoins) {
-        totalSupply += numCoins;
-        std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
+void mintCoins(uint64_t numCoins) {
+    if (numCoins <= 0) {
+        std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
+        return;
     }
+    if (totalSupply + numCoins < totalSupply) {
+        std::cerr << "[ERROR] Overflow detected in total supply.\n";
+        return;
+    }
+    totalSupply += numCoins;
+    std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
+}
 
     void displayStatus() {
         std::cout << "Value: $" << value << ", Sales: " << sales << ", Total Supply: " << totalSupply << std::endl;
@@ -805,18 +805,20 @@ void fetchExternalTransactions() {
 #include <fstream>
 
 
-
 void fetchExternalTransactions() {
-    // Example: Replace direct system call with file handling or a library
-    std::ifstream scraperOutput("scraper_output.txt");
-    if (!scraperOutput.is_open()) {
-        std::cerr << "[ERROR] Failed to open scraper output file.\n";
-        return;
-    }
+    try {
+        std::ifstream scraperOutput("scraper_output.txt");
+        if (!scraperOutput.is_open()) {
+            throw std::runtime_error("Failed to open scraper output file.");
+        }
 
-    std::string line;
-    while (std::getline(scraperOutput, line)) {
-        std::cout << "[INFO] External transaction: " << line << "\n";
+        std::string line;
+        while (std::getline(scraperOutput, line)) {
+            std::cout << "[INFO] External transaction: " << line << "\n";
+        }
+        scraperOutput.close();
+    } catch (const std::exception &e) {
+        std::cerr << "[ERROR] " << e.what() << "\n";
     }
 }
             Block newBlock(chain.size(), blockTxs, last.hash);
@@ -1296,9 +1298,10 @@ std::unordered_map<std::string, double> ledger = {
     {"User1", 5000.0},
     {"User2", 250000000.0},
     {"User3", 2000000.0}
-};
-
+auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{})); 
+// Replace with actual parsing logic for ISO 8601 format timestamps
 // Historical transactions
+  
 std::unordered_map<std::string, std::vector<Transaction>> transactionHistory;
 
 // Fraud detection function
