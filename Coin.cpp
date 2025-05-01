@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <cstdlib>
 #include <thread>
 #include <memory>
 #include <future>
@@ -35,16 +34,24 @@ struct Transaction {
     std::string signature;
     std::string timestamp;
 
+   struct Transaction {
+    std::string sender;
+    std::string receiver;
+    double amount;
+    std::string signature;
+    std::string timestamp;
+
     Transaction(const std::string& from, const std::string& to, double amt, const std::string& sig)
         : sender(from), receiver(to), amount(amt), signature(sig) {
         auto now = std::chrono::system_clock::now();
         std::time_t time = std::chrono::system_clock::to_time_t(now);
         timestamp = std::ctime(&time);
- std::string toString() const {
-    return sender + receiver + std::to_string(amount) + timestamp + signature;
-}
-}
-};
+    }
+
+    std::string toString() const {
+        return sender + receiver + std::to_string(amount) + timestamp + signature;
+    }
+};  // Add this closing brace
 
 // === Block Structure ===
 struct Block {
@@ -240,20 +247,7 @@ using namespace std;
  * hash value as a hexadecimal-encoded string.
  * 
  * @param input The input string to be hashed.
- * @return The hexadecimal-encoded SHA-3 hash of the input.
-std::string EL40_Hash(const std::string &input) {
-    using namespace CryptoPP;
-
-    SHA3_256 hash;
-    byte digest[SHA3_256::DIGESTSIZE];
-    hash.CalculateDigest(digest, (const byte *)input.c_str(), input.length());
-
-    std::string output;
-    HexEncoder encoder(new StringSink(output));
-    encoder.Put(digest, sizeof(digest));
-    encoder.MessageEnd();
-
-    return output;
+ 
 }g EL40_Hash(const std::string& input) {
     using namespace CryptoPP;
 
@@ -485,12 +479,17 @@ void mintCoins(uint64_t numCoins) {
         return;
     }
     if (totalSupply + numCoins < totalSupply) {
+     void mintCoins(uint64_t numCoins) {
+    if (numCoins <= 0) {
+        std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
+        return;
+    }
+    if (totalSupply + numCoins < totalSupply) {
         std::cerr << "[ERROR] Overflow detected in total supply.\n";
         return;
     }
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
-}
 }
         // Minting mechanism: Mint 0.5 billion coins after 1 billion sales
         if (sales >= 1000000000) {
@@ -788,6 +787,12 @@ void fetchExternalTransactions() {
         if (!scraperOutput.is_open()) {
             throw std::runtime_error("Failed to open scraper output file.");
         }
+void fetchExternalTransactions() {
+    try {
+        std::ifstream scraperOutput("scraper_output.txt");
+        if (!scraperOutput.is_open()) {
+            throw std::runtime_error("Failed to open scraper output file.");
+        }
 
         std::string line;
         while (std::getline(scraperOutput, line)) {
@@ -798,10 +803,6 @@ void fetchExternalTransactions() {
         std::cerr << "[ERROR] " << e.what() << "\n";
     }
 }
-            std::vector<Transaction> blockTxs = transactions;
-            // Add block reward
-            Transaction rewardTx = {"Network", minerAddress, 25.0, "Reward"}; // Example block reward
-            blockTxs.push_back(rewardTx);
 #include <filesystem>
 #include <fstream>
 
@@ -1304,7 +1305,8 @@ auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{}));
 // Historical transactions
   
 std::unordered_map<std::string, std::vector<Transaction>> transactionHistory;
-
+// Proper ISO 8601 timestamp parsing logic
+auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{}));
 // Fraud detection function
 bool isFraudulent(const Transaction& tx) {
     // Check if the transaction amount exceeds the maximum allowed
