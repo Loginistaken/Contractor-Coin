@@ -232,21 +232,6 @@ using namespace std;
  * 
  * @param input The input string to be hashed.
  * @return The hexadecimal-encoded SHA-3 hash of the input.
- */
-std::string EL40_Hash(const std::string& input) {
-    using namespace CryptoPP;
-
-    SHA3_256 hash;
-    byte digest[SHA3_256::DIGESTSIZE];
-    hash.CalculateDigest(digest, (const byte*)input.c_str(), input.length());
-
-    std::string output;
-    HexEncoder encoder(new StringSink(output));
-    encoder.Put(digest, sizeof(digest));
-    encoder.MessageEnd();
-
-    return output;
-}
 std::string signTransaction(const std::string& data, const CryptoPP::RSA::PrivateKey& privateKey) {
     CryptoPP::AutoSeededRandomPool rng;  // Random generator for cryptographic operations
     std::string signature;
@@ -266,7 +251,7 @@ std::string signTransaction(const std::string& data, const CryptoPP::RSA::Privat
 
 /**
  * @brief Verifies the authenticity of a digital signature.
- * std::tm tm = {};
+ *std::tm tm = {};
 std::istringstream ss("2025-04-20T10:00:00");
 ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
 auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&tm));
@@ -300,6 +285,9 @@ bool approveBlockAI(const std::string &blockData) {
         return false;
     }
 
+    std::cout << "[AI] Block approved.\n";
+    return true;
+}
     std::cout << "[AI] Block approved.\n";
     return true;
 }
@@ -468,6 +456,14 @@ public:
             sales = 0;            // Reset sales counter for the next cycle
         }
     }
+    }
+    if (totalSupply + numCoins < totalSupply) {
+        std::cerr << "[ERROR] Overflow detected in total supply.\n";
+        return;
+    }
+    totalSupply += numCoins;
+    std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
+}
 void mintCoins(uint64_t numCoins) {
     if (numCoins <= 0) {
         std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
@@ -480,14 +476,6 @@ void mintCoins(uint64_t numCoins) {
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
 }
-
-    void displayStatus() {
-        std::cout << "Value: $" << value << ", Sales: " << sales << ", Total Supply: " << totalSupply << std::endl;
-    }
-};
-
-int main() {
-    ContractorCoin coin;
 
     // Simulate sales
     for (int i = 1; i <= 1500000; ++i) {
@@ -658,12 +646,6 @@ double blockReward = 25.0;  // Add this to the configuration section
 Transaction rewardTx = {"Network", minerAddress, blockReward, "Reward"};  // Replace hardcoded 25.0 with blockReward
 
 // Replace `system` call in `fetchExternalTransactions` with a safer alternative
-void fetchExternalTransactions() {
-    std::ifstream scraperOutput("scraper_output.txt");  // Assume output is saved by scraper
-    if (!scraperOutput.is_open()) {
-        std::cerr << "[ERROR] Failed to open scraper output file.\n";
-        return;
-    }
 void fetchExternalTransactions() {
     try {
         std::ifstream scraperOutput("scraper_output.txt");
