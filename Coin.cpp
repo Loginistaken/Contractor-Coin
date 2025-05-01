@@ -23,7 +23,7 @@
 #include "storage.h"        // LevelDB or SQLite-based persistent storage
 #include "external/crow/include/crow_all.h" // Crow web framework
 #include <regex>
-
+#include "hashing_library.h" // Replace with the actual file containing EL40_Hash
   
 
 // === Transaction Structure ===
@@ -601,14 +601,10 @@ Transaction rewardTx = {"Network", minerAddress, blockReward, "Reward"};  // Rep
 // Replace `system` call in `fetchExternalTransactions` with a safer alternative
 void fetchExternalTransactions() {
     try {
-        std::ifstream scraperOutput("scraper_output.txt");
-        if (!scraperOutput.is_open()) {
-            throw std::runtime_error("Failed to open scraper output file.");
-        }
-
-        std::string line;
-        while (std::getline(scraperOutput, line)) {
-            std::cout << "[INFO] External transaction: " << line << "\n";
+        sstd::ifstream scraperOutput("scraper_output.txt");
+if (!scraperOutput.is_open()) {
+    throw std::runtime_error("Failed to open scraper output file.");
+}
         }
         scraperOutput.close();
     } catch (const std::exception &e) {
