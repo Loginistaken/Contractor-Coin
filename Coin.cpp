@@ -438,13 +438,7 @@ public:
         }
     }
     }
-    if (totalSupply + numCoins < totalSupply) {
-        std::cerr << "[ERROR] Overflow detected in total supply.\n";
-        return;
-    }
-    totalSupply += numCoins;
-    std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
-}
+ 
 
 // === ContractorCoin_Core.h ===
 #pragma once
