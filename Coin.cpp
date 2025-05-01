@@ -42,7 +42,24 @@ struct Block {
         timestamp = std::to_string(std::time(nullptr));
         hash = generateHash();
     }
+std::string EL40_Hash(const std::string& input) {
+    using namespace CryptoPP;
 
+    // Create a SHA-256 hasher
+    SHA256 hash;
+    std::string digest;
+
+    // Perform the hash computation
+    StringSource(input, true, 
+        new HashFilter(hash,
+            new HexEncoder(
+                new StringSink(digest) // Output the hash as a hexadecimal string
+            )
+        )
+    );
+
+    return digest;
+}
     std::string generateHash() const {
         std::string toHash = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
         for (const auto& tx : transactions) {
