@@ -94,9 +94,7 @@ void testCryptoFunctionality() {
     std::cout << "SHA-3 hash computed successfully.\n";
 }
 
-#include <cstdlib> // For system() command
 
-#include <thread>
 #include <chrono>
 
 // Utility function to execute shell commands and check for success
