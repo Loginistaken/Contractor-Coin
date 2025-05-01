@@ -42,8 +42,9 @@ struct Transaction {
         timestamp = std::ctime(&time);
     }
 
-    std::string toString() const {
-        return sender + receiver + std::to_string(amount) + timestamp;
+   std::string toString() const {
+    return sender + receiver + std::to_string(amount) + timestamp + signature;
+}
     }
 };
 
@@ -243,6 +244,20 @@ using namespace std;
  * @param input The input string to be hashed.
  * @return The hexadecimal-encoded SHA-3 hash of the input.
  */
+std::string EL40_Hash(const std::string &input) {
+    using namespace CryptoPP;
+
+    SHA3_256 hash;
+    byte digest[SHA3_256::DIGESTSIZE];
+    hash.CalculateDigest(digest, (const byte *)input.c_str(), input.length());
+
+    std::string output;
+    HexEncoder encoder(new StringSink(output));
+    encoder.Put(digest, sizeof(digest));
+    encoder.MessageEnd();
+
+    return output;
+}
 std::string EL40_Hash(const std::string& input) {
     using namespace CryptoPP;
 
@@ -279,8 +294,8 @@ std::string signTransaction(const std::string& data, const CryptoPP::RSA::Privat
 
     // Sign the input data and store the resulting signature
     CryptoPP::StringSource ss(data, true,
-        new CryptoPP::SignerFilter(rng, signer,
-            new CryptoPP::StringSink(signature)  // Attach the signature output
+      auto pastTime = std::chrono::system_clock::from_time_t(std::mktime(&std::tm{})); 
+// Replace with actual parsing logic for ISO 8601 format
         )
     );
 
@@ -303,38 +318,27 @@ bool verifyTransaction(const std::string& data, const std::string& signature, co
     CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(publicKey);  // RSA Verifier object
     bool result = false;
 
-    try {
-        // Verify the signature by appending it to the data and passing it to the verifier
-        CryptoPP::StringSource ss(signature + data, true,
-            new CryptoPP::SignatureVerificationFilter(
-                verifier,
-                new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
-                CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION | CryptoPP::SignatureVerificationFilter::PUT_RESULT
- #include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <cctype>
-
-// Simulated AI-based block approval
-bool approveBlockAI(const std::string& blockData) {
-    // Simulated heuristic: Check for suspicious patterns or anomalies in block data
+   bool approveBlockAI(const std::string &blockData) {
     std::cout << "[AI] Analyzing block data...\n";
 
-    // Example heuristic: Block data must not contain suspicious keywords (e.g., "fraud", "invalid")
+    // Check for suspicious keywords
     std::vector<std::string> suspiciousKeywords = {"fraud", "invalid", "error", "malicious"};
-    std::string lowercaseBlockData = blockData;
-
-    // Convert block data to lowercase for case-insensitive comparison
-    std::transform(lowercaseBlockData.begin(), lowercaseBlockData.end(), lowercaseBlockData.begin(), [](unsigned char c) {
-        return std::tolower(c);
-    });
-
-    for (const auto& keyword : suspiciousKeywords) {
-        if (lowercaseBlockData.find(keyword) != std::string::npos) {
+    for (const auto &keyword : suspiciousKeywords) {
+        if (blockData.find(keyword) != std::string::npos) {
             std::cerr << "[AI] Block rejected due to suspicious keyword: " << keyword << "\n";
-            return false; // Block rejected
+            return false;
         }
+    }
+
+    // Validate block length
+    if (blockData.length() < 100 || blockData.length() > 10000) {
+        std::cerr << "[AI] Block rejected due to invalid data length.\n";
+        return false;
+    }
+
+    std::cout << "[AI] Block approved.\n";
+    return true;
+}
     }
 
     // Example heuristic: Block data length must meet a minimum threshold
@@ -482,7 +486,18 @@ public:
         else if (sales <= 1200000) {
             value += 1.0; // Slower increase after peaking
         }
-
+void mintCoins(uint64_t numCoins) {
+    if (numCoins <= 0) {
+        std::cerr << "[ERROR] Number of coins to mint must be positive.\n";
+        return;
+    }
+    if (totalSupply + numCoins < totalSupply) {
+        std::cerr << "[ERROR] Overflow detected in total supply.\n";
+        return;
+    }
+    totalSupply += numCoins;
+    std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
+}
         // Minting mechanism: Mint 0.5 billion coins after 1 billion sales
         if (sales >= 1000000000) {
             mintCoins(500000000); // Mint 0.5 billion coins
@@ -766,7 +781,22 @@ public:
         std::lock_guard<std::mutex> lock(chainMutex); // Ensure thread safety
         if (approveBlockAI(transactionsToString(transactions))) { // AI approval process
             Block last = chain.back();
-            
+void fetchExternalTransactions() {
+    try {
+        std::ifstream scraperOutput("scraper_output.txt");
+        if (!scraperOutput.is_open()) {
+            throw std::runtime_error("Failed to open scraper output file.");
+        }
+
+        std::string line;
+        while (std::getline(scraperOutput, line)) {
+            std::cout << "[INFO] External transaction: " << line << "\n";
+        }
+        scraperOutput.close();
+    } catch (const std::exception &e) {
+        std::cerr << "[ERROR] " << e.what() << "\n";
+    }
+}
             std::vector<Transaction> blockTxs = transactions;
             // Add block reward
             Transaction rewardTx = {"Network", minerAddress, 25.0, "Reward"}; // Example block reward
