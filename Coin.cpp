@@ -412,39 +412,6 @@ private:
     uint64_t sales;        // Number of sales
     uint64_t totalSupply;  // Total coin supply
 
-public:
-    ContractorCoin() : value(0.00001), sales(0), totalSupply(0) {}
-
-    void sellCoin(uint64_t numCoins) {
-        sales += numCoins;
-
-        // Phase 1: Rapid increase for first 40 sales (starting with 5 decimals)
-        if (sales <= 40) {
-            value *= pow(10, sales); // Rapid increase for initial transactions
-        }
-        // Phase 2: Gradual increase until value reaches $0.001
-        else if (sales <= 100000) {
-            if (value < 0.001) {
-                value += 0.00001; // Gradual increase
-            }
-        }
-        // Phase 3: Accelerate the value growth until $1 by 1 million sales
-        else if (sales <= 1000000) {
-            if (value < 1.0) {
-                value += (value * 0.01); // Accelerates until $1
-            }
-        }
-        // Phase 4: Rapid acceleration to $700 between 1 million and 1.1 million sales
-        else if (sales <= 1100000) {
-            if (value < 700.0) {
-                value += (value * 0.5); // Rapid acceleration to $700
-            }
-        }
-        // Phase 5: Slower growth after $700
-        else if (sales <= 1200000) {
-            value += 1.0; // Slower increase after peaking
-        }
-
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
 }
@@ -513,39 +480,8 @@ func (c *ContractorCoin) SellCoins(numCoins uint64) {
 		c.Sales = 0 // reset
 	}
 
-	// Logging for audit trail
-	log.Printf("Sold %d coins | Total Supply: %d | New Value: $%.6f", numCoins, c.TotalSupply, c.Value)
+	
 }
-
-// mintCoins adds new coins
-func (c *ContractorCoin) mintCoins(amount uint64) {
-	c.TotalSupply += amount
-	log.Printf("Minted %d coins! New supply: %d", amount, c.TotalSupply)
-}
-
-// PrintComplianceNotice shows legal language for developers/users
-func PrintComplianceNotice() {
-	fmt.Println("⚖️ LEGAL NOTICE:")
-	fmt.Println("This coin uses an algorithmic pricing model based on sales volume.")
-	fmt.Println("All pricing mechanisms are publicly disclosed and intended for educational or research use.")
-	fmt.Println("Ensure full compliance with local regulations (KYC/AML, consumer protections).")
-	fmt.Println("This algorithm adjusts token value based on transaction volume and is not a guarantee of profit.   
-  fmt. Users should conduct their own due diligence. By interacting with this system, you acknowledge and accept the financial risks involved. 
-  fmt. Regulatory compliance, tax obligations, and legal usage remain your responsibility under applicable laws.")
-
-}
-
-func main() {
-	PrintComplianceNotice()
-
-	token := NewContractorCoin()
-	token.SellCoins(10)
-	token.SellCoins(30)
-	token.SellCoins(50000)
-	token.SellCoins(950000)
-	token.SellCoins(100000)
-}
-
 
 // === ContractorCoin_Core.h ===
 #pragma once
