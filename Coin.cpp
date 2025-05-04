@@ -455,7 +455,97 @@ public:
         }
     }
     }
- 
+ package main
+
+import (
+	"fmt"
+	"log"
+	"math"
+)
+
+// ContractorCoin represents a token with price based on algorithmic growth
+type ContractorCoin struct {
+	Value       float64 // Coin value in USD
+	Sales       uint64  // Number of sales
+	TotalSupply uint64  // Total supply
+	KYCEnabled  bool    // Compliance simulation flag
+}
+
+// NewContractorCoin initializes the token
+func NewContractorCoin() *ContractorCoin {
+	return &ContractorCoin{
+		Value:       0.00001,
+		Sales:       0,
+		TotalSupply: 0,
+		KYCEnabled:  true, // simulate KYC flag
+	}
+}
+
+// SellCoins processes a sale
+func (c *ContractorCoin) SellCoins(numCoins uint64) {
+	// Phase-based pricing algorithm
+	c.Sales += numCoins
+
+	switch {
+	case c.Sales <= 40:
+		c.Value *= math.Pow(10, float64(numCoins))
+	case c.Sales <= 100000:
+		if c.Value < 0.001 {
+			c.Value += 0.00001
+		}
+	case c.Sales <= 1000000:
+		if c.Value < 1.0 {
+			c.Value += (c.Value * 0.01)
+		}
+	case c.Sales <= 1100000:
+		if c.Value < 700 {
+			c.Value += (c.Value * 0.5)
+		}
+	case c.Sales <= 1200000:
+		c.Value += 1.0
+	}
+
+	c.TotalSupply += numCoins
+
+	// Minting 0.5 billion coins after 1 billion sales
+	if c.Sales >= 1000000000 {
+		c.mintCoins(500000000)
+		c.Sales = 0 // reset
+	}
+
+	// Logging for audit trail
+	log.Printf("Sold %d coins | Total Supply: %d | New Value: $%.6f", numCoins, c.TotalSupply, c.Value)
+}
+
+// mintCoins adds new coins
+func (c *ContractorCoin) mintCoins(amount uint64) {
+	c.TotalSupply += amount
+	log.Printf("Minted %d coins! New supply: %d", amount, c.TotalSupply)
+}
+
+// PrintComplianceNotice shows legal language for developers/users
+func PrintComplianceNotice() {
+	fmt.Println("⚖️ LEGAL NOTICE:")
+	fmt.Println("This coin uses an algorithmic pricing model based on sales volume.")
+	fmt.Println("All pricing mechanisms are publicly disclosed and intended for educational or research use.")
+	fmt.Println("Ensure full compliance with local regulations (KYC/AML, consumer protections).")
+	fmt.Println("This algorithm adjusts token value based on transaction volume and is not a guarantee of profit.   
+  fmt. Users should conduct their own due diligence. By interacting with this system, you acknowledge and accept the financial risks involved. 
+  fmt. Regulatory compliance, tax obligations, and legal usage remain your responsibility under applicable laws.")
+
+}
+
+func main() {
+	PrintComplianceNotice()
+
+	token := NewContractorCoin()
+	token.SellCoins(10)
+	token.SellCoins(30)
+	token.SellCoins(50000)
+	token.SellCoins(950000)
+	token.SellCoins(100000)
+}
+
 
 // === ContractorCoin_Core.h ===
 #pragma once
