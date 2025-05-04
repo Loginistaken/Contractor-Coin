@@ -4,14 +4,14 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <crow.h>        // Include the CROW framework
-#include <curl/curl.h>   // For HTTP requests to external APIs
-#include <json/json.h>   // For parsing JSON responses
 #include <ctime>
 #include <mutex>
 #include <sstream>
 #include <cmath>
-#include <curl/curl.h> // For HTTP calls (e.g., Oracle and APIs)
+#include <thread>
+#include <curl/curl.h>   // For HTTP requests to external APIs
+#include <json/json.h>   // For parsing JSON responses
+#include <crow.h>        // Include the CROW framework
 
 // Simulated Blockchain and Wallet structures
 struct Wallet {
@@ -97,77 +97,6 @@ public:
     void displayChain() const {
         std::lock_guard<std::mutex> lock(chainMutex);
         for (const auto& block : chain) {
-            void startCrowServer() {
-    crow::SimpleApp app;
-
-    // Define a route for fetching live exchange rates
-    CROW_ROUTE(app, "/get-exchange-rate")
-    ([]() {
-        double rate = fetchUsdExchangeRate();
-        if (rate > 0) {
-            return crow::response(std::to_string(rate));
-        } else {
-            return crow::response(500, "Failed to fetch exchange rate.");
-        }
-    });
-int main() {
-    // Start the CROW server in a separate thread
-    std::thread crowServerThread(startCrowServer);
-    crowServerThread.detach();
-
-    // Initialize blockchain
-    ContractorCoinBlockchain blockchain;
-
-    // Simulate user wallet
-    Wallet userWallet = {"0xEL40UserAddress", 100000.0}; // Start with 100,000 tokens
-
-    // Add some transactions to the blockchain
-    std::vector<Transaction> transactions = {
-        {"User1", "User2", 50.0},
-        {"User2", "User3", 25.0}
-    };
-    blockchain.addBlock(transactions);
-
-    // Display the blockchain
-    blockchain.displayChain();
-
-    // Simulate a purchase
-    double usdToSpend = 10.00; // Purchase amount in USD
-    std::string merchant = "Merchant_12345";
-
-    std::cout << "[Wallet] Starting token balance: " << userWallet.tokenBalance << "\n";
-    authorizePurchase(userWallet, usdToSpend, merchant);
-    std::cout << "[Wallet] Ending token balance: " << userWallet.tokenBalance << "\n";
-
-    // Keep the main thread running to allow API server operation
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-
-    return 0;
-}
-    // Define a route for processing transactions
-    CROW_ROUTE(app, "/process-transaction")
-    ([](const crow::request& req) {
-        auto jsonBody = crow::json::load(req.body);
-        if (!jsonBody) {
-            return crow::response(400, "Invalid JSON payload.");
-        }
-
-        double usdAmount = jsonBody["usdAmount"].d();
-        std::string merchantId = jsonBody["merchantId"].s();
-
-        std::ostringstream response;
-        response << "[Transaction] Processed payment of $" << usdAmount << " to merchant " << merchantId;
-        return crow::response(response.str());
-    });
-
-    // Start the server
-    app.port(18080).multithreaded().run();
-}
-    // Start the server
-    app.port(18080).multithreaded().run();
-}
             std::cout << "Block Index: " << block.index << "\n"
                       << "Timestamp: " << block.timestamp << "\n"
                       << "Hash: " << block.hash << "\n"
@@ -238,6 +167,10 @@ bool processMerchantPayment(const std::string& merchantId, double usdAmount) {
 // Authorize and process a purchase using ContractorCoin
 bool authorizePurchase(Wallet& wallet, double usdAmount, const std::string& merchantId) {
     double rate = fetchUsdExchangeRate();
+    if (rate <= 0) {
+        std::cout << "[Error] Invalid exchange rate.\n";
+        return false;
+    }
     double requiredTokens = usdAmount / rate;
 
     std::cout << "[Conversion] $" << usdAmount << " = " << requiredTokens << " tokens at rate $" << rate << "/token\n";
@@ -250,8 +183,47 @@ bool authorizePurchase(Wallet& wallet, double usdAmount, const std::string& merc
     }
 }
 
+// Start the Crow server in a separate thread
+void startCrowServer() {
+    crow::SimpleApp app;
+
+    // Define a route for fetching live exchange rates
+    CROW_ROUTE(app, "/get-exchange-rate")
+    ([]() {
+        double rate = fetchUsdExchangeRate();
+        if (rate > 0) {
+            return crow::response(std::to_string(rate));
+        } else {
+            return crow::response(500, "Failed to fetch exchange rate.");
+        }
+    });
+
+    // Define a route for processing transactions
+    CROW_ROUTE(app, "/process-transaction")
+    ([](const crow::request& req) {
+        auto jsonBody = crow::json::load(req.body);
+        if (!jsonBody) {
+            return crow::response(400, "Invalid JSON payload.");
+        }
+
+        double usdAmount = jsonBody["usdAmount"].d();
+        std::string merchantId = jsonBody["merchantId"].s();
+
+        std::ostringstream response;
+        response << "[Transaction] Processed payment of $" << usdAmount << " to merchant " << merchantId;
+        return crow::response(response.str());
+    });
+
+    // Start the server
+    app.port(18080).multithreaded().run();
+}
+
 // Main driver: Demonstrate Blockchain and Debit Card Features
 int main() {
+    // Start the Crow server in a separate thread
+    std::thread crowServerThread(startCrowServer);
+    crowServerThread.detach();
+
     // Initialize blockchain
     ContractorCoinBlockchain blockchain;
 
@@ -275,6 +247,11 @@ int main() {
     std::cout << "[Wallet] Starting token balance: " << userWallet.tokenBalance << "\n";
     authorizePurchase(userWallet, usdToSpend, merchant);
     std::cout << "[Wallet] Ending token balance: " << userWallet.tokenBalance << "\n";
+
+    // Keep the main thread running to allow API server operation
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 
     return 0;
 }
