@@ -105,16 +105,24 @@ struct Block {
         encoder.MessageEnd();
         return hashHex;
     }
-
-    void mineBlock(int difficulty) {
-        std::string target(difficulty, '0');
-        while (hash.substr(0, difficulty) != target) {
-            nonce++;
-            hash = generateHash();
+void validateBlock() {
+    // Validate all transactions within the block
+    for (const auto& tx : transactions) {
+        if (!tx.verifyTransaction(/* Add public key here */)) {
+            std::cerr << "[ERROR] Invalid transaction signature in block " << index << "!\n";
+            throw std::runtime_error("Block validation failed due to invalid transaction.");
         }
     }
-};
 
+    // Recalculate hash to ensure block integrity
+    std::string recalculatedHash = generateHash();
+    if (recalculatedHash != hash) {
+        std::cerr << "[ERROR] Block hash mismatch detected in block " << index << "!\n";
+        throw std::runtime_error("Block validation failed due to hash mismatch.");
+    }
+
+    std::cout << "[INFO] Block " << index << " validated successfully.\n";
+}
 class Blockchain {
 private:
     std::vector<Block> chain;
@@ -129,17 +137,24 @@ public:
         chain.push_back(createGenesisBlock());
     }
 
-    void addBlock(const std::vector<Transaction>& transactions) {
-        std::lock_guard<std::mutex> lock(chainMutex);
+   
+void addBlock(const std::vector<Transaction>& transactions) {
+    std::lock_guard<std::mutex> lock(chainMutex);
 
-        // Validate all transactions
-        for (const auto& tx : transactions) {
-            if (!tx.verifyTransaction(/* Add public key here */)) {
-                std::cerr << "[ERROR] Invalid transaction signature!\n";
-                return;
-            }
+    // Validate all transactions
+    for (const auto& tx : transactions) {
+        if (!tx.verifyTransaction(/* Add public key here */)) {
+            std::cerr << "[ERROR] Invalid transaction signature!\n";
+            return;
         }
+    }
 
+    Block newBlock(chain.size(), transactions, chain.back().hash);
+    newBlock.validateBlock(); // Validate the block instead of mining
+
+    chain.push_back(newBlock);
+    std::cout << "[INFO] Block validated and added with hash: " << newBlock.hash << "\n";
+}
         Block newBlock(chain.size(), transactions, chain.back().hash);
         int difficulty = chain.size() / 10 + 1;
         newBlock.mineBlock(difficulty);
