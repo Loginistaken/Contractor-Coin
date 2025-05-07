@@ -335,8 +335,8 @@ struct Block {
     int nonce;
 #pragma once
 
-const double OWNER_VAULT_INITIAL_BALANCE = 1'000'000'000.0;
-const double USER_VAULT_INITIAL_BALANCE = 6'000'000'000.0;
+const double OWNER_VAULT_INITIAL_BALANCE = 1'000'000'000.0; 1 billion coins with 7 decimals multiply by 1e7
+const double USER_VAULT_INITIAL_BALANCE = 6'000'000'000.0; 6 billion coins with 7 decimals multiply by 1e7
 #include "config.h"
 
 ledger["OwnerVault"] = OWNER_VAULT_INITIAL_BALANCE; // Initialize Owner Vault
