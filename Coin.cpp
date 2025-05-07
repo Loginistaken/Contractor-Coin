@@ -414,21 +414,7 @@ private:
 
     totalSupply += numCoins;
     std::cout << "Minted " << numCoins << " coins. Total supply: " << totalSupply << std::endl;
-}
-        // Minting mechanism: Mint 0.5 billion coins after 1 billion sales
-        if (sales >= 1000000000) {
-            mintCoins(500000000); // Mint 0.5 billion coins
-            sales = 0;            // Reset sales counter for the next cycle
-        }
-    }
-    }
- package main
 
-import (
-	"fmt"
-	"log"
-	"math"
-)
 
 // ContractorCoin represents a token with price based on algorithmic growth
 type ContractorCoin struct {
@@ -437,13 +423,8 @@ type ContractorCoin struct {
 	TotalSupply uint64  // Total supply
 	KYCEnabled  bool    // Compliance simulation flag
 }
-	c.TotalSupply += numCoins
+	
 
-	// Minting 0.5 billion coins after 1 billion sales
-	if c.Sales >= 1000000000 {
-		c.mintCoins(500000000)
-		c.Sales = 0 // reset
-	}
 }
 // === ContractorCoin_Core.h ===
 #pragma once
