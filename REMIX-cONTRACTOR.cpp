@@ -18,7 +18,84 @@
 
 // Include JSON library (e.g., JsonCpp)
 #include <json/json.h>
+// === Block Structure ===
+struct Block {
+    int index;
+    std::string timestamp;
+    std::vector<Transaction> transactions;
+    std::string prevHash;
+    std::string hash;
+    int nonce;
+#pragma once
+ 
+const double OWNER_VAULT_INITIAL_BALANCE = 100'000'000'000'000'000.0; 1 billion coins with 7 decimals multiply by 1e7
+const double USER_VAULT_INITIAL_BALANCE = 600'000'000'000'000'000.0; 6 billion coins with 7 decimals multiply by 1e7
+#include "config.h"
 
+ledger["OwnerVault"] = OWNER_VAULT_INITIAL_BALANCE; // Initialize Owner Vault
+ledger["UserVault"] = USER_VAULT_INITIAL_BALANCE;  // Initialize User Vault
+    Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
+        : index(idx), transactions(txs), prevHash(prev), nonce(0) {
+        timestamp = std::to_string(std::time(nullptr));
+        hash = generateHash();
+    }
+
+    std::string generateHash() const {
+        std::string toHash = std::to_string(index) + timestamp + prevHash + std::to_string(nonce);
+        for (const auto& tx : transactions) {
+            toHash += tx.toString();
+        }
+        return EL40_Hash(toHash);
+    }
+
+    void mineBlock(int difficulty) {
+        std::string target(difficulty, '0');
+        while (hash.substr(0, difficulty) != target) {
+            nonce++;
+            hash = generateHash();
+        }
+    }
+};
+
+// === EL-40 Blockchain Class ===
+class EL40_Blockchain {
+private:
+    std::vector<Block> chain;
+
+
+
+    Block createGenesisBlock() {
+        return Block(0, {}, "0");
+    }
+
+    void addBlock(const std::vector<Transaction>& transactions) {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        Block last = chain.back();
+        Block newBlock(chain.size(), transactions, last.hash);
+
+        int difficulty = chain.size() / 10 + 1; // Adjust difficulty as blockchain grows
+        newBlock.mineBlock(difficulty);
+
+        chain.push_back(newBlock);
+
+        for (auto& tx : transactions) {
+            ledger[tx.sender] -= tx.amount;
+            ledger[tx.receiver] += tx.amount;
+        }
+
+        std::cout << "[INFO] Block added with hash: " << newBlock.hash << "\n";
+    }
+
+    void displayChain() const {
+        std::lock_guard<std::mutex> lock(chainMutex);
+        for (const auto& block : chain) {
+            std::cout << "Block Index: " << block.index << "\n"
+                      << "Timestamp: " << block.timestamp << "\n"
+                      << "Hash: " << block.hash << "\n"
+                      << "Previous Hash: " << block.prevHash << "\n\n";
+        }
+    }
+};
 // Define constants
 const double MAX_TRANSACTION_AMOUNT = 5000000.0;
 const int MAX_TRANSACTION_FREQUENCY = 5000000;
