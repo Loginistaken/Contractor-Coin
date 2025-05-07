@@ -437,41 +437,6 @@ type ContractorCoin struct {
 	TotalSupply uint64  // Total supply
 	KYCEnabled  bool    // Compliance simulation flag
 }
-
-// NewContractorCoin initializes the token
-func NewContractorCoin() *ContractorCoin {
-	return &ContractorCoin{
-		Value:       0.00001,
-		Sales:       0,
-		TotalSupply: 0,
-		KYCEnabled:  true, // simulate KYC flag
-	}
-}
-
-// SellCoins processes a sale
-func (c *ContractorCoin) SellCoins(numCoins uint64) {
-	// Phase-based pricing algorithm
-	c.Sales += numCoins
-
-	switch {
-	case c.Sales <= 40:
-		c.Value *= math.Pow(10, float64(numCoins))
-	case c.Sales <= 100000:
-		if c.Value < 0.001 {
-			c.Value += 0.00001
-		}
-	case c.Sales <= 1000000:
-		if c.Value < 1.0 {
-			c.Value += (c.Value * 0.01)
-		}
-	case c.Sales <= 1100000:
-		if c.Value < 700 {
-			c.Value += (c.Value * 0.5)
-		}
-	case c.Sales <= 1200000:
-		c.Value += 1.0
-	}
-
 	c.TotalSupply += numCoins
 
 	// Minting 0.5 billion coins after 1 billion sales
@@ -479,10 +444,7 @@ func (c *ContractorCoin) SellCoins(numCoins uint64) {
 		c.mintCoins(500000000)
 		c.Sales = 0 // reset
 	}
-
-	
 }
-
 // === ContractorCoin_Core.h ===
 #pragma once
 #include <string>
@@ -1233,7 +1195,7 @@ void simulateMobileApp() {
 
 // Define thresholds (adjustable)
 const double MAX_TRANSACTION_AMOUNT = 5000000.0;   // Limit for transaction amount
-const int MAX_TRANSACTION_FREQUENCY = 1000;       // Limit for transaction frequency
+const int MAX_TRANSACTION_FREQUENCY = 5000000;       // Limit for transaction frequency
 const std::string UNKNOWN_ACCOUNT = "UNKNOWN";    // Flag for unknown accounts
 
 // Transaction structure
@@ -1389,7 +1351,7 @@ bool isFraudulent(const Transaction& tx) {
     // 2. Multiple transactions from the same sender in a short time.
     // 3. Insufficient funds (double spending attempt).
 
-    const double FRAUD_THRESHOLD = 10000.0; // Example threshold
+    const double FRAUD_THRESHOLD = 50000000.0; // Example threshold
 
     if (tx.amount > FRAUD_THRESHOLD) {
         std::cerr << "[FRAUD ALERT] Transaction flagged: Amount exceeds threshold.\n";
