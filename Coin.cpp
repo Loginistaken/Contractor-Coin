@@ -27,7 +27,7 @@
   
 
 // === Transaction Structure ===
-
+//SHA-3; SHA-256
 // === Block Structure ===
 struct Block {
     int index;
