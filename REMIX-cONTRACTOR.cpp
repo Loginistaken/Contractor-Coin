@@ -26,14 +26,13 @@ struct Block {
     std::string prevHash;
     std::string hash;
     int nonce;
-#pragma once
+
  
 const double OWNER_VAULT_INITIAL_BALANCE = 10'000'000'000'000'000.0; 1 billion coins with 7 decimals multiply by 1e7
 const double USER_VAULT_INITIAL_BALANCE = 60'000'000'000'000'000.0; 6 billion coins with 7 decimals multiply by 1e7
-#include "config.h"
 
-ledger["OwnerVault"] = OWNER_VAULT_INITIAL_BALANCE; // Initialize Owner Vault
-ledger["UserVault"] = USER_VAULT_INITIAL_BALANCE;  // Initialize User Vault
+
+
     Block(int idx, const std::vector<Transaction>& txs, const std::string& prev)
         : index(idx), transactions(txs), prevHash(prev), nonce(0) {
         timestamp = std::to_string(std::time(nullptr));
@@ -301,29 +300,12 @@ void displayExitPopup() {
     std::cout << "\nDDoS Protection Enabled: Network safety is ensured during this operation.\n";
 }
 
-// Function for node access agreement
-bool nodeAccessAgreement() {
-    std::string response;
-    std::cout << "\nEL-40 Blockchain: Do you accept the node connection agreement? (yes/no): ";
-    std::cin >> response;
 
-    if (response == "yes" || response == "Yes") {
-        std::cout << "\nAccess granted. Connecting node...\n";
-        std::cout << "\nThis connection allows nodes to sync transactions and view blockchain data securely.\n";
-        return true;
-    } else {
-        std::cout << "\nAccess denied. Returning to homepage...\n";
-        return false;
-    }
-}
 
 // Main function
 int main() {
     try {
         std::cout << "Welcome to the EL-40 Blockchain Program.\n";
-#include <iostream>
-#include <string>
-#include <crow_all.h> // Crow framework for the web dashboard
 
 // Node Connection Agreement
 bool nodeAccessAgreement() {
@@ -351,15 +333,6 @@ double getCoinPriceUSD() {
 void startWebDashboard() {
     crow::SimpleApp app;
 
-    // Homepage Route
-    CROW_ROUTE(app, "/")([](){
-        double price = getCoinPriceUSD();
-        std::string html_content = "<html><head><title>Buy Contractor Coin</title></head>"
-                                   "<body><h1>Welcome to Contractor Coin</h1>"
-                                   "<p>Purchase coins and view your balance.</p>"
-                                   "<p>Current Price: $" + std::to_string(price) + "</p></body></html>";
-        return html_content;
-    });
 
     // Stats Route
     CROW_ROUTE(app, "/stats")([](){
