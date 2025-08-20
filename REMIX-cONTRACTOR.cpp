@@ -44,7 +44,7 @@ const double USER_VAULT_INITIAL_BALANCE = 60'000'000'000'000'000.0; 6 billion co
         for (const auto& tx : transactions) {
             toHash += tx.toString();
         }
-        return EL40_Hash(toHash);
+        
     }
 
     void mineBlock(int difficulty) {
@@ -119,7 +119,7 @@ struct Node {
 };
 
 // Global variables
-std::vector<Transaction> blockchain;
+std::vector<Transaction> EL40_Blockchain;
 std::unordered_map<std::string, double> ledger = {
     {"User1", 5000.0},
     {"User2", 250000000.0},
@@ -243,7 +243,19 @@ void updateNodeReputation(const std::string& nodeName, int change) {
         std::cerr << "[ERROR] Node not found: " << nodeName << "\n";
     }
 }
-
+// Node Connection Agreement
+bool nodeAccessAgreement() {
+    std::string response;
+    std::cout << "Do you accept the node connection agreement? (yes/no): ";
+    std::cin >> response;
+    if (response == "yes" || response == "Yes") {
+        std::cout << "Access granted. Connecting node...\n";
+        return true;
+    } else {
+        std::cout << "Access denied. Exiting application.\n";
+        return false;
+    }
+}
 // Function to start the web dashboard
 void startWebDashboard() {
     crow::SimpleApp app;
@@ -302,24 +314,7 @@ void displayExitPopup() {
 
 
 
-// Main function
-int main() {
-    try {
-        std::cout << "Welcome to the EL-40 Blockchain Program.\n";
 
-// Node Connection Agreement
-bool nodeAccessAgreement() {
-    std::string response;
-    std::cout << "Do you accept the node connection agreement? (yes/no): ";
-    std::cin >> response;
-    if (response == "yes" || response == "Yes") {
-        std::cout << "Access granted. Connecting node...\n";
-        return true;
-    } else {
-        std::cout << "Access denied. Exiting application.\n";
-        return false;
-    }
-}
 
 // CoinGecko API Integration (for fetching USD value)
 double getCoinPriceUSD() {
