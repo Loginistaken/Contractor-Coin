@@ -190,10 +190,16 @@ public:
         newBlock.mineBlock(difficulty);
         chain.push_back(newBlock);
         std::lock_guard<std::mutex> l(ledgerMutex);
-        for (const auto& tx : blockTxs) {
-            ledger[tx.sender] -= tx.amount;
-            ledger[tx.receiver] += tx.amount;
-        }
+  
+// Reward transactions (minting): add to miner's balance without subtracting from anyone
+for (const auto& tx : blockTxs) {
+    if (tx.sender == "Network") {
+        ledger[tx.receiver] += tx.amount; // Mint the reward
+    } else {
+        ledger[tx.sender] -= tx.amount;
+        ledger[tx.receiver] += tx.amount;
+    }
+}
         std::cout << "[+] Block added by " << minerAddress << " with reward 25.0 ELX\n";
     }
 
