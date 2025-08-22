@@ -1,6 +1,6 @@
 // contractor_coin.cpp -- EL-40 / Contractor Coin, v90 (fixed-point, sig+nonce mandatory)
 // ---------------------------------------------------------------------------------------
-// What’s new vs. your merged version:
+
 // - Fixed-point Amount (int64_t) with 7 decimals (UNIT=10,000,000) — no floating drift
 // - Mandatory signatures for all non-coinbase transactions (coinbase exempt)
 // - Mandatory nonces (strictly last+1 per sender) — replay protection
